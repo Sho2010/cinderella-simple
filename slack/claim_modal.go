@@ -7,9 +7,9 @@ import (
 	"github.com/slack-go/slack"
 )
 
-func BuildHomeView() (*slack.Blocks, error) {
+func BuildClaimModalView() (*slack.Blocks, error) {
 
-	file := "slack/views/home.json"
+	file := "slack/views/claim_modal.json"
 
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {

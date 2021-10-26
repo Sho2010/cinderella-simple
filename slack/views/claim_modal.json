@@ -1,0 +1,172 @@
+[
+		{
+			"type": "section",
+			"text": {
+				"type": "plain_text",
+				"text": "Kubernetesへの権限の申請を行います。"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "section",
+			"block_id": "section-period",
+			"text": {
+				"type": "mrkdwn",
+				"text": "接続時間"
+			},
+			"accessory": {
+				"type": "static_select",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Select an item",
+					"emoji": true
+				},
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "30m",
+							"emoji": true
+						},
+						"value": "value-0"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "*this is plain_text text*",
+							"emoji": true
+						},
+						"value": "value-1"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "*this is plain_text text*",
+							"emoji": true
+						},
+						"value": "value-2"
+					}
+				],
+				"action_id": "static_select-action"
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "input-namespace",
+			"element": {
+				"type": "plain_text_input"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Namespace"
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "input-description",
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "理由"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "header",
+			"text": {
+				"type": "plain_text",
+				"text": "Enctyption type",
+				"emoji": true
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "plain_text",
+				"text": ":lock: 接続情報受け渡し時の暗号化方式に関する設定を行います。:key:",
+				"emoji": true
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*暗号化方式*"
+			},
+			"accessory": {
+				"type": "radio_buttons",
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "Zip password",
+							"emoji": true
+						},
+						"value": "encrypt-gpg"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "GPG",
+							"emoji": true
+						},
+						"value": "enrypt-zip"
+					}
+				],
+				"action_id": "radio_buttons-action"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*GPG Option*\nGPGを選択した場合、公開鍵の受け渡し方法をどちらか入力"
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "input-github-acc",
+			"element": {
+				"type": "plain_text_input",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "@sho2010"
+				},
+				"action_id": "github-account"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "GitHub Account(Get GPG public key from github)",
+				"emoji": true
+			}
+		},
+		{
+			"type": "input",
+			"block_id": "input-gpg-key",
+			"element": {
+				"type": "plain_text_input",
+				"multiline": true,
+				"placeholder": {
+					"type": "plain_text",
+					"text": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n...\n-----END PGP PUBLIC KEY BLOCK-----"
+				},
+				"action_id": "gpg-public-key"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "GPG public key",
+				"emoji": true
+			}
+		}
+	]
+

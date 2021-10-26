@@ -44,6 +44,7 @@ func (gen *KubeconfigGenerator) Generate(writer io.Writer, name, namespace strin
 		return err
 	}
 
+	//TODO: 固定パス修正
 	tf := "./k8s/templates/kubeconfig.tmpl"
 	tmpl, err := template.ParseFiles(tf)
 	if err != nil {

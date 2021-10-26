@@ -84,18 +84,21 @@ func (s *Slack) Start() {
 					continue
 				}
 
-				fmt.Printf("Interaction received: %+v\n", callback)
+				//DEBUG
+				// fmt.Printf("Interaction received: %+v\n", callback)
 
 				var payload interface{}
 
 				switch callback.Type {
 				case slack.InteractionTypeBlockActions:
 					// See https://api.slack.com/apis/connections/socket-implement#button
-
+					s.blockActionsHandler(callback)
 					s.Socket.Debugf("button clicked!")
-				case slack.InteractionTypeShortcut:
 				case slack.InteractionTypeViewSubmission:
 					// See https://api.slack.com/apis/connections/socket-implement#modal
+					// modalに対してレスポンスを返す時のイベント
+
+				case slack.InteractionTypeShortcut:
 				case slack.InteractionTypeDialogSubmission:
 				default:
 
@@ -158,14 +161,75 @@ func (s *Slack) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
 	// おすすめは、ユーザー名+タイムスタンプ。
 	// これだと、よほどのことがない限り被らず安心です。
 
-	s.Api.PublishView(e.User,
+	blocks, err := BuildHomeView()
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = s.Api.PublishView(e.User,
 		slack.HomeTabViewRequest{
-			Type: slack.VTHomeTab,
-			Blocks: slack.Blocks{
-				BlockSet: buildHomeView(),
-			},
+			Type:            slack.VTHomeTab,
+			Blocks:          *blocks,
 			PrivateMetadata: "",
-			CallbackID:      "cinderella_home_general",
-			ExternalID:      "",
-		}, "place_holder")
+			CallbackID:      "cinderella_home_general_02",
+			ExternalID:      "cinderella_home_general_dakfjda",
+		}, "")
+
+	if err != nil {
+		panic(err)
+	}
 }
+
+func (s *Slack) blockActionsHandler(callback slack.InteractionCallback) {
+	fmt.Printf("ActionID:%s\n", callback.ActionID)
+	fmt.Printf("TriggerID:%s\n", callback.TriggerID)
+
+	for _, v := range callback.ActionCallback.AttachmentActions {
+		fmt.Println("---AttachmentActions element")
+		fmt.Printf("%#v\n", v.Name)
+	}
+
+	for _, v := range callback.ActionCallback.BlockActions {
+		fmt.Println("---Block Actions element")
+		fmt.Printf("BlockID: %#v\n", v.BlockID)
+		fmt.Printf("ActionID: %#v\n", v.ActionID)
+		fmt.Printf("Text: %#v\n", v.Text.Text)
+		fmt.Printf("Value: %#v\n", v.Value)
+		fmt.Println("---")
+	}
+
+	s.Show(callback.User.ID, callback.TriggerID)
+
+}
+
+//TODO
+func (s *Slack) Show(userID, triggerID string) {
+
+	blocks, err := BuildClaimModalView()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(blocks)
+
+	modal := slack.ModalViewRequest{
+		Type:       slack.VTModal,
+		Title:      slack.NewTextBlockObject("plain_text", "権限申請", false, false),
+		Blocks:     *blocks,
+		Close:      slack.NewTextBlockObject("plain_text", "close", false, false),
+		Submit:     slack.NewTextBlockObject("plain_text", "submit", false, false),
+		CallbackID: "cinderella_claim",
+		ExternalID: "cinderella_home_general_adfdaeda",
+	}
+
+	r, err := s.Api.OpenView(triggerID, modal)
+	if err != nil {
+		log.Printf("とりあえずデバッグの為握りつぶす %v ", err)
+	}
+	println(r)
+}
+
+// NOTE;
+// validation errorとかでModalの更新が必要な場合
+// s.Api.UpdateView()
+// modalから更にモーダルを呼ぶ
+// s.Api.PublishView
