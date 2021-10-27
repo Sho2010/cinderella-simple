@@ -6,7 +6,7 @@ import (
 )
 
 // Global Channel
-var AuditCh = make(chan AuditEvent)
+var auditCh = make(chan AuditEvent)
 
 type AuditEvent interface {
 	GetMessage() string
@@ -24,6 +24,10 @@ type AuditEventHandler interface {
 // this is broadcast of the event copy to EventHandlers when audit event received
 type AuditBroadcaster struct {
 	EventHandlers []AuditEventHandler
+}
+
+func PublishEvent(e AuditEvent) {
+	auditCh <- e
 }
 
 // Start is

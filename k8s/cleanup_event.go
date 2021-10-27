@@ -30,5 +30,5 @@ func RaiseCleanupEvent(description string) {
 		description: description,
 	}
 
-	audit.AuditCh <- e
+	audit.PublishEvent(e)
 }
