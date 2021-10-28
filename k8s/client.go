@@ -26,7 +26,9 @@ func GetClient() (kubernetes.Interface, string) {
 func buildOutOfClusterConfig() (*rest.Config, error) {
 	kubeconfigPath := os.Getenv("KUBECONFIG")
 	if kubeconfigPath == "" {
-		kubeconfigPath = homeDir() + "/.kube/config"
+		home, _ := os.UserHomeDir()
+		fmt.Printf("home: %s", home)
+		kubeconfigPath = home + "/.kube/config"
 	}
 	return clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 }
@@ -44,11 +46,4 @@ func GetClientOutOfCluster() (kubernetes.Interface, string) {
 	}
 
 	return clientset, config.Host
-}
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
 }
