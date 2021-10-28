@@ -7,7 +7,9 @@ import (
 	"io"
 	"text/template"
 
+	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/Sho2010/cinderella-simple/config"
+	"github.com/Sho2010/cinderella-simple/encrypt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -32,7 +34,6 @@ type KubeconfigValues struct {
 }
 
 func (gen *KubeconfigGenerator) Generate(writer io.Writer, name, namespace string) error {
-
 	sa, err := gen.findSA(name, namespace)
 
 	if err != nil {
@@ -55,10 +56,6 @@ func (gen *KubeconfigGenerator) Generate(writer io.Writer, name, namespace strin
 	if err != nil {
 		return err
 	}
-
-	// fmt.Println("store kubeconfig to secret")
-	// ctx := context.TODO()
-	// gen.storeKubeconfig(ctx, sa)
 
 	return nil
 
@@ -145,5 +142,38 @@ func (gen *KubeconfigGenerator) storeKubeconfig(ctx context.Context, sa *v1.Serv
 	if err != nil {
 		panic(err)
 	}
+	return nil
+}
+
+func CreateEncryptedFile(writer io.Writer, claim claim.Claim) error {
+	r, w := io.Pipe()
+	defer r.Close()
+
+	go func() {
+		defer w.Close()
+		client, _ := GetDefaultClient()
+		gen := KubeconfigGenerator{
+			Client: client,
+		}
+		sa, err := claim.GetServiceAccountName()
+		if err != nil {
+			return
+		}
+		gen.Generate(w, sa, ServiceAccountNamespace)
+	}()
+
+	var enc encrypt.FileEncrypter
+
+	enc, err := encrypt.CreateEncrypter(claim.EncryptType)
+	if err != nil {
+		return fmt.Errorf("Create encrypter failed: %w", err)
+	}
+
+	// TODO: もうちょっとパスワードの受け渡し方法考える
+	if zip, ok := enc.(*encrypt.ZipEncrypter); ok {
+		zip.Password = claim.ZipPassword
+	}
+
+	enc.Encrypt(writer, r)
 	return nil
 }
