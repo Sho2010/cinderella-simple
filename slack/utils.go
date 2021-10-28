@@ -17,38 +17,6 @@ func generateExternalID(base string) string {
 	return fmt.Sprintf("%s.%s", base, t)
 }
 
-func Marshal(b *slack.Blocks, file string) {
-	data, err := b.MarshalJSON()
-	if err != nil {
-		log.Printf("marshal err")
-	}
-
-	f, err := os.Create(file)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	f.Write(data)
-}
-
-func UnMarshalTest() *slack.Blocks {
-	file := os.Args[1]
-
-	bytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-
-	blocks := slack.Blocks{}
-
-	if err := blocks.UnmarshalJSON(bytes); err != nil {
-		fmt.Println(err)
-		panic(err)
-	}
-
-	return &blocks
-}
-
 func dumpInteractionCallback(callback slack.InteractionCallback) {
 	fmt.Printf("ActionID:%s\n", callback.ActionID)
 	fmt.Printf("TriggerID:%s\n", callback.TriggerID)
