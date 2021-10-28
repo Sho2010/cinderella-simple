@@ -1,30 +1,38 @@
 package encrypt
 
 import (
-	"bytes"
-	"github.com/yeka/zip"
+	"fmt"
 	"io"
 	"log"
-	"os"
+
+	"github.com/sethvargo/go-password/password"
+	"github.com/yeka/zip"
 )
 
 type ZipEncrypter struct {
 	Password string
 }
 
-func (enc *ZipEncrypter) Encrypt(dst string, src []byte) error {
-	fzip, err := os.Create(dst)
-	if err != nil {
-		log.Fatalln(err)
+func (enc *ZipEncrypter) Encrypt(w io.Writer, r io.Reader) error {
+
+	if len(enc.Password) == 0 {
+		fmt.Printf("!!!Zip password blank")
+		passwd, err := password.Generate(32, 10, 10, false, false)
+		if err != nil {
+			return fmt.Errorf("password generate fail: %w", err)
+		}
+		enc.Password = passwd
 	}
-	zipw := zip.NewWriter(fzip)
+
+	zipw := zip.NewWriter(w)
 	defer zipw.Close()
 
 	w, err := zipw.Encrypt("cinderella_config", enc.Password, zip.AES256Encryption)
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = io.Copy(w, bytes.NewReader(src))
+	_, err = io.Copy(w, r)
+
 	if err != nil {
 		log.Fatal(err)
 	}

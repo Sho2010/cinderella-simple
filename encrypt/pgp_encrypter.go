@@ -3,6 +3,7 @@ package encrypt
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -17,12 +18,12 @@ type PGPEncrypter struct {
 	privateKey *packet.PrivateKey
 }
 
-func (*PGPEncrypter) Encrypt(path string) error {
-	return nil
+func (*PGPEncrypter) Encrypt(w io.Writer, r io.Reader) error {
+	// ImplementMe
+	return fmt.Errorf("Not Implemented!")
 }
 
 func NewPGPEncrypter() (PGPEncrypter, error) {
-	// ImplementMe
 	return PGPEncrypter{}, nil
 }
 
