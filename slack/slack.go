@@ -181,51 +181,24 @@ func (s *Slack) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
 }
 
 func (s *Slack) blockActionsHandler(callback slack.InteractionCallback) {
-	fmt.Printf("ActionID:%s\n", callback.ActionID)
-	fmt.Printf("TriggerID:%s\n", callback.TriggerID)
-
-	for _, v := range callback.ActionCallback.AttachmentActions {
-		fmt.Println("---AttachmentActions element")
-		fmt.Printf("%#v\n", v.Name)
-	}
+	dumpInteractionCallback(callback)
 
 	for _, v := range callback.ActionCallback.BlockActions {
-		fmt.Println("---Block Actions element")
-		fmt.Printf("BlockID: %#v\n", v.BlockID)
-		fmt.Printf("ActionID: %#v\n", v.ActionID)
-		fmt.Printf("Text: %#v\n", v.Text.Text)
-		fmt.Printf("Value: %#v\n", v.Value)
-		fmt.Println("---")
+
+		switch v.ActionID {
+		case "open_settings":
+		case "create_claim":
+			c := ClaimController{
+				Slack: s,
+			}
+			c.Show(callback.User.ID, callback.TriggerID)
+		case "create_kubeconfig":
+		case "claim_details":
+		case "claim_reject":
+
+		}
 	}
 
-	s.Show(callback.User.ID, callback.TriggerID)
-
-}
-
-//TODO
-func (s *Slack) Show(userID, triggerID string) {
-
-	blocks, err := BuildClaimModalView()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(blocks)
-
-	modal := slack.ModalViewRequest{
-		Type:       slack.VTModal,
-		Title:      slack.NewTextBlockObject("plain_text", "権限申請", false, false),
-		Blocks:     *blocks,
-		Close:      slack.NewTextBlockObject("plain_text", "close", false, false),
-		Submit:     slack.NewTextBlockObject("plain_text", "submit", false, false),
-		CallbackID: "cinderella_claim",
-		ExternalID: "cinderella_home_general_adfdaeda",
-	}
-
-	r, err := s.Api.OpenView(triggerID, modal)
-	if err != nil {
-		log.Printf("とりあえずデバッグの為握りつぶす %v ", err)
-	}
-	println(r)
 }
 
 // NOTE;
