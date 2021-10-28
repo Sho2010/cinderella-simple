@@ -1,13 +1,36 @@
 package k8s
 
 import (
+	"fmt"
 	"log"
 	"os"
 
+	"github.com/Sho2010/cinderella-simple/config"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
+
+//TODO: どうしようかな
+var (
+	ServiceAccountNamespace = "default"
+)
+
+func GetDefaultClient() (kubernetes.Interface, string) {
+	var kubeClient kubernetes.Interface
+	var server string
+
+	if _, err := rest.InClusterConfig(); err != nil {
+		kubeClient, server = GetClientOutOfCluster()
+	} else {
+		kubeClient, server = GetClient()
+	}
+
+	c := config.GetConfig()
+	c.KubeServer = server
+
+	return kubeClient, server
+}
 
 func GetClient() (kubernetes.Interface, string) {
 	config, err := rest.InClusterConfig()
