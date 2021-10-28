@@ -7,7 +7,6 @@ import (
 var instance *Config
 
 func init() {
-
 	// //TODO: 環境変数による上書き処理
 	instance = &Config{
 		CleanupTickEvery: 10 * time.Second,
@@ -22,6 +21,7 @@ type Config struct {
 	Namespace        string
 	ManifestDirs     []string
 	KubeServer       string
+	Slack            SlackConfig
 }
 
 func GetConfig() *Config {
