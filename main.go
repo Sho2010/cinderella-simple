@@ -6,57 +6,31 @@ import (
 	"os"
 
 	"github.com/Sho2010/cinderella-simple/audit"
-	"github.com/Sho2010/cinderella-simple/config"
-	"github.com/Sho2010/cinderella-simple/controller"
 	"github.com/Sho2010/cinderella-simple/k8s"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"github.com/Sho2010/cinderella-simple/slack"
 )
 
 func main() {
 	fmt.Println("hello cinderella")
 
-	client := initClient()
+	ctx := context.Background()
+	client, _ := k8s.GetDefaultClient()
 
-	// gen(client)
-
-	controller.StoreSecret()
-
-	c, err := k8s.NewCleaner(client)
+	cleaner, err := k8s.NewCleaner(client)
 	if err != nil {
 		panic(err)
 	}
 
-	go c.Start(context.TODO())
-	h := audit.LogHandler{
-		LogWriter: os.Stdout,
-	}
+	go cleaner.Start(ctx)
 
-	h.Start(audit.AuditCh)
+	broadcast := audit.AuditBroadcaster{}
+	broadcast.Start()
+
+	//tokenが設定されてた場合slack socket mode を起動
+	if len(os.Getenv("SLACK_BOT_TOKEN")) != 0 && len(os.Getenv("SLACK_APP_TOKEN")) != 0 {
+		s := slack.NewSlack()
+		s.Start()
+	}
 
 	select {} // Block all
-}
-
-func gen(client kubernetes.Interface) {
-	gen := k8s.KubeconfigGenerator{
-		Client: client,
-	}
-	gen.Generate(os.Stdout, "test", "glass")
-
-}
-
-func initClient() kubernetes.Interface {
-	var kubeClient kubernetes.Interface
-	var server string
-
-	if _, err := rest.InClusterConfig(); err != nil {
-		kubeClient, server = k8s.GetClientOutOfCluster()
-	} else {
-		kubeClient, server = k8s.GetClient()
-	}
-
-	c := config.GetConfig()
-	c.KubeServer = server
-
-	return kubeClient
 }

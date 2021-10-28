@@ -16,6 +16,8 @@ var (
 	ServiceAccountNamespace = "default"
 )
 
+//TODO: client取得するときにHost一緒に返すのあまりにも使いづらいのでなんとかする
+
 func GetDefaultClient() (kubernetes.Interface, string) {
 	var kubeClient kubernetes.Interface
 	var server string

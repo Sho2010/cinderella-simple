@@ -28,6 +28,7 @@ func NewCleaner(client kubernetes.Interface) (Cleaner, error) {
 
 func (cleaner *Cleaner) Start(ctx context.Context) error {
 
+	// TODO: configに直接の依存関係を持たない
 	// TODO: gen child context
 	config := config.GetConfig()
 	t := time.NewTicker(config.CleanupTickEvery)
@@ -55,6 +56,7 @@ func (c *Cleaner) getListOptions() metav1.ListOptions {
 }
 
 func (c *Cleaner) cleanupResources(ctx context.Context, now time.Time) {
+	//TODO: Implement me
 	fmt.Println(now.Format(time.RFC3339))
 	c.listManagedResources(ctx)
 }
@@ -65,6 +67,7 @@ func (c *Cleaner) listManagedResources(ctx context.Context) (*rbacv1.RoleList, e
 		panic(err)
 	}
 
+	//debug code: audit eventをFireさせる
 	RaiseCleanupEvent("Raise audit event test")
 	for _, v := range list.Items {
 		fmt.Printf("Name: %s\n", v.Name)

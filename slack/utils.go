@@ -2,9 +2,6 @@ package slack
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
 	"strconv"
 	"time"
 
