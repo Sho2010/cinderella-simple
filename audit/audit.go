@@ -2,6 +2,8 @@ package audit
 
 import (
 	"fmt"
+	"os"
+	"reflect"
 	"time"
 )
 
@@ -17,7 +19,7 @@ type AuditEvent interface {
 // AuditEventHandler can processing received audit event
 type AuditEventHandler interface {
 	// Start audit event handler loop
-	Start(event <-chan AuditEvent)
+	Start(ch <-chan AuditEvent)
 }
 
 // AuditBroadcaster is only reciever of AuditEvent channel
@@ -26,42 +28,61 @@ type AuditBroadcaster struct {
 	EventHandlers []AuditEventHandler
 }
 
+// PublishEvent method is the only way to publish audit event
 func PublishEvent(e AuditEvent) {
 	auditCh <- e
 }
 
-// Start is
-func (b *AuditBroadcaster) Start(event <-chan AuditEvent) {
+func (b *AuditBroadcaster) Start() {
 	fmt.Println("Start audit event broadcasting")
 
-	for e := range event {
-		fmt.Printf("Recieve audit event:%s\n", e.GetMessage())
+	//debug
+	b.testInit()
 
-		//TODO: tee実装で他のevent handler channelにブロードキャストする
+	b.initializeTeeChannel(auditCh)
+
+}
+
+func (b *AuditBroadcaster) testInit() {
+	b.EventHandlers = []AuditEventHandler{
+		NewLogHandler(os.Stdout),
+		NewLogHandler(os.Stdout),
+		NewLogHandler(os.Stdout),
+		NewLogHandler(os.Stdout),
+		NewLogHandler(os.Stdout),
+		NewLogHandler(os.Stdout),
 	}
 }
 
+// NOTE: 可変長channelに対しては
+// seletc { case } によるchannel処理ができないためreflect.SelectCaseを使う
+// See: https://zenn.dev/imamura_sh/articles/select-arbitary-number-of-channels
+//      https://github.com/eapache/channels/blob/master/channels.go#L120-L140
+
 // 書籍:Go言語による並行処理 tee実装
-// func Tee(done <-chan struct{}, in <-chan interface{}) (<-chan interface{}, <-chan interface{}) {
-//     out1 := make(chan interface{})
-//     out2 := make(chan interface{})
-//
-//     go func() {
-//         defer close(out1)
-//         defer close(out2)
-//
-//         for v := range OrDone(done, in) {
-//             var ch1, ch2 = out1, out2
-//             for i := 0; i < 2; i++ {
-//                 select {
-//                 case ch1 <- v:
-//                     ch1 = nil
-//                 case ch2 <- v:
-//                     ch2 = nil
-//                 }
-//             }
-//         }
-//     }()
-//
-//     return out1, out2
-// }
+func (b *AuditBroadcaster) initializeTeeChannel(in <-chan AuditEvent) {
+
+	cases := make([]reflect.SelectCase, len(b.EventHandlers))
+	chs := make([]chan AuditEvent, len(b.EventHandlers))
+
+	for i := range cases {
+		cases[i].Dir = reflect.SelectSend
+		chs[i] = make(chan AuditEvent)
+		go b.EventHandlers[i].Start(chs[i])
+	}
+
+	go func() {
+		for event := range in {
+			for i := range cases {
+				// select { case ch1 < event } と同義
+				cases[i].Chan = reflect.ValueOf(chs[i])
+				cases[i].Send = reflect.ValueOf(event)
+			}
+			for _ = range cases {
+				chosen, _, _ := reflect.Select(cases)
+				cases[chosen].Chan = reflect.ValueOf(nil)
+			}
+		}
+	}()
+}
+
