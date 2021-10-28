@@ -46,11 +46,8 @@ func (b *AuditBroadcaster) Start() {
 func (b *AuditBroadcaster) testInit() {
 	b.EventHandlers = []AuditEventHandler{
 		NewLogHandler(os.Stdout),
-		NewLogHandler(os.Stdout),
-		NewLogHandler(os.Stdout),
-		NewLogHandler(os.Stdout),
-		NewLogHandler(os.Stdout),
-		NewLogHandler(os.Stdout),
+		NewLogHandler(os.Stderr),
+		NewSlackHandler(),
 	}
 }
 
@@ -58,8 +55,9 @@ func (b *AuditBroadcaster) testInit() {
 // seletc { case } によるchannel処理ができないためreflect.SelectCaseを使う
 // See: https://zenn.dev/imamura_sh/articles/select-arbitary-number-of-channels
 //      https://github.com/eapache/channels/blob/master/channels.go#L120-L140
+//
+// Recieve側のChannelの数が決まってるなら「Go言語による並行処理」に書いてある tee実装で良さそう
 
-// 書籍:Go言語による並行処理 tee実装
 func (b *AuditBroadcaster) initializeTeeChannel(in <-chan AuditEvent) {
 
 	cases := make([]reflect.SelectCase, len(b.EventHandlers))
