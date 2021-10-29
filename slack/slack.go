@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -13,7 +14,14 @@ import (
 type Slack struct {
 	Api    *slack.Client
 	Socket *socketmode.Client
+	Claims []claim.SlackClaim
 }
+
+const (
+	ViewHomeCallbackID   = "cinderella_home"
+	ViewClaimCallbackID  = "cinderella_claim_modal"
+	ViewRejectCallbackID = "cinderella_claim_reject"
+)
 
 func NewSlack() *Slack {
 	api := slack.New(
@@ -93,7 +101,6 @@ func (s *Slack) Start() {
 				case slack.InteractionTypeBlockActions:
 					// See https://api.slack.com/apis/connections/socket-implement#button
 					s.blockActionsHandler(callback)
-					s.Socket.Debugf("button clicked!")
 				case slack.InteractionTypeViewSubmission:
 					// See https://api.slack.com/apis/connections/socket-implement#modal
 					// modalに対してレスポンスを返す時のイベント
@@ -147,44 +154,19 @@ func (s *Slack) Start() {
 }
 
 func (s *Slack) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
-	// NOTE: hashに関して
-	// A string that represents view state to protect against possible race conditions.
-
-	// NOTE: CallbackID
-	// 表示したViewの識別子 以下のようにする予定
-	// cinderella_home_general
-	// cinderella_home_admin
-
-	// NOTE: ExternalID
-	// こちらは種類ごとではなくて、表示されたModal1つ1つの識別コードのイメージ。Workspace内で一意にしておく必要があります。
-	//
-	// おすすめは、ユーザー名+タイムスタンプ。
-	// これだと、よほどのことがない限り被らず安心です。
-
-	blocks, err := BuildHomeView()
-	if err != nil {
-		panic(err)
+	c := HomeController{
+		slack: s.Api,
 	}
-
-	_, err = s.Api.PublishView(e.User,
-		slack.HomeTabViewRequest{
-			Type:            slack.VTHomeTab,
-			Blocks:          *blocks,
-			PrivateMetadata: "",
-			CallbackID:      "cinderella_home_general_02",
-			ExternalID:      "cinderella_home_general_dakfjda",
-		}, "")
-
-	if err != nil {
-		panic(err)
-	}
+	c.Show(e)
 }
 
 func (s *Slack) blockActionsHandler(callback slack.InteractionCallback) {
+
+	s.Socket.Debugf("button clicked!")
+
 	dumpInteractionCallback(callback)
 
 	for _, v := range callback.ActionCallback.BlockActions {
-
 		switch v.ActionID {
 		case "open_settings":
 		case "create_claim":
@@ -193,12 +175,32 @@ func (s *Slack) blockActionsHandler(callback slack.InteractionCallback) {
 			}
 			c.Show(callback.User.ID, callback.TriggerID)
 		case "create_kubeconfig":
+			c := KubeconfigController{
+				slack: s.Api,
+			}
+			claim, err := s.findClaim(callback.User.ID)
+			if err != nil {
+				if err := c.ShowClaimNotFound(callback.User.ID); err != nil {
+					panic(err)
+				}
+				fmt.Println(err)
+				return
+			}
+			c.SendSlackDM(claim)
 		case "claim_details":
 		case "claim_reject":
 
 		}
 	}
+}
 
+func (s *Slack) findClaim(userId string) (claim.SlackClaim, error) {
+	for _, claim := range s.Claims {
+		if claim.SlackUser.ID == userId {
+			return claim, nil
+		}
+	}
+	return claim.SlackClaim{}, fmt.Errorf("Could not find claim")
 }
 
 // NOTE;

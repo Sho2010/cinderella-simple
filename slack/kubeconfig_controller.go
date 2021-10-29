@@ -11,8 +11,15 @@ import (
 )
 
 type KubeconfigController struct {
-	//TODO private
-	Slack *slack.Client
+	slack *slack.Client
+}
+
+func (c *KubeconfigController) ShowClaimNotFound(channelId string) error {
+	_, _, err := c.slack.PostMessage(channelId, slack.MsgOptionText("権限要求が見つかりませんでした。申し訳ございませんがもう一度申請を行い、改善しないようであれば管理者に連絡してください。", false))
+	if err != nil {
+		return fmt.Errorf("slack PostMessage failed, %w", err)
+	}
+	return nil
 }
 
 func (c *KubeconfigController) Create(claim.Claim) {
@@ -34,7 +41,7 @@ func (c *KubeconfigController) SendSlackDM(claim claim.SlackClaim) {
 
 	//TODO: わかりやすいメッセージ
 
-	f, err := c.Slack.UploadFile(
+	f, err := c.slack.UploadFile(
 		slack.FileUploadParameters{
 			File: tmpFile.Name(),
 			// Reader:   file,
