@@ -28,7 +28,7 @@ func main() {
 
 	//tokenが設定されてた場合slack socket mode を起動
 	if len(os.Getenv("SLACK_BOT_TOKEN")) != 0 && len(os.Getenv("SLACK_APP_TOKEN")) != 0 {
-		s := slack.NewSlack()
+		s := slack.NewSlackApp().Slack.Administrators)
 		s.Start()
 	}
 

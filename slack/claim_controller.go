@@ -7,7 +7,7 @@ import (
 )
 
 type ClaimController struct {
-	Slack *Slack
+	Slack *SlackApp
 }
 
 func (c *ClaimController) Show(userID, triggerID string) {
@@ -34,10 +34,11 @@ func (c *ClaimController) Show(userID, triggerID string) {
 	println(r)
 }
 
+func (c *ClaimController) Create() {
+
+}
+
 func (c *ClaimController) generateExternalID() string {
 	return generateExternalID(ViewClaimCallbackID)
 }
 
-func (c *ClaimController) Create() {
-
-}

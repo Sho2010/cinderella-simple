@@ -11,10 +11,13 @@ import (
 	"github.com/slack-go/slack/socketmode"
 )
 
-type Slack struct {
+// SlackApp App
+type SlackApp struct {
 	Api    *slack.Client
 	Socket *socketmode.Client
 	Claims []claim.SlackClaim
+	// Administrators are slack app administrators. they can accept/reject permission claim.
+	administrators []string
 }
 
 const (
@@ -23,7 +26,8 @@ const (
 	ViewRejectCallbackID = "cinderella_claim_reject"
 )
 
-func NewSlack() *Slack {
+func NewSlackApp(administrators []string) *SlackApp {
+
 	api := slack.New(
 		os.Getenv("SLACK_BOT_TOKEN"),
 		slack.OptionAppLevelToken(os.Getenv("SLACK_APP_TOKEN")),
@@ -36,13 +40,17 @@ func NewSlack() *Slack {
 		socketmode.OptionDebug(true),
 		socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)),
 	)
-	return &Slack{
-		Api:    api,
-		Socket: socketMode,
+
+	s := SlackApp{
+		Api:            api,
+		Socket:         socketMode,
+		administrators: administrators,
 	}
+
+	return &s
 }
 
-func (s *Slack) Start() {
+func (s *SlackApp) Start() {
 	go func() {
 		for evt := range s.Socket.Events {
 			switch evt.Type {
@@ -153,14 +161,14 @@ func (s *Slack) Start() {
 	s.Socket.Run()
 }
 
-func (s *Slack) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
+func (s *SlackApp) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
 	c := HomeController{
 		slack: s.Api,
 	}
 	c.Show(e)
 }
 
-func (s *Slack) blockActionsHandler(callback slack.InteractionCallback) {
+func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 
 	s.Socket.Debugf("button clicked!")
 
@@ -168,7 +176,6 @@ func (s *Slack) blockActionsHandler(callback slack.InteractionCallback) {
 
 	for _, v := range callback.ActionCallback.BlockActions {
 		switch v.ActionID {
-		case "open_settings":
 		case "create_claim":
 			c := ClaimController{
 				Slack: s,
@@ -187,20 +194,32 @@ func (s *Slack) blockActionsHandler(callback slack.InteractionCallback) {
 				return
 			}
 			c.SendSlackDM(claim)
-		case "claim_details":
-		case "claim_reject":
+		// case "open_settings":
+		// case "claim_details":
+		// case "claim_reject":
+		default:
+			s.Socket.Debugf("unsupported block action: %s", v.ActionID)
 
 		}
 	}
 }
 
-func (s *Slack) findClaim(userId string) (claim.SlackClaim, error) {
+func (s *SlackApp) findClaim(userId string) (claim.SlackClaim, error) {
 	for _, claim := range s.Claims {
 		if claim.SlackUser.ID == userId {
 			return claim, nil
 		}
 	}
 	return claim.SlackClaim{}, fmt.Errorf("Could not find claim")
+}
+
+func (s *SlackApp) IsAdmin(slackID string) bool {
+	for _, v := range s.administrators {
+		if v == slackID {
+			return true
+		}
+	}
+	return false
 }
 
 // NOTE;
