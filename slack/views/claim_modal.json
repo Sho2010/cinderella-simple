@@ -109,7 +109,7 @@
 							"text": "Zip password",
 							"emoji": true
 						},
-						"value": "encrypt-gpg"
+						"value": "encrypt-zip"
 					},
 					{
 						"text": {
@@ -117,7 +117,7 @@
 							"text": "GPG",
 							"emoji": true
 						},
-						"value": "enrypt-zip"
+						"value": "encrypt-gpg"
 					}
 				],
 				"action_id": "radio_buttons-action"
