@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"os"
 	"text/template"
 
 	"github.com/Sho2010/cinderella-simple/claim"
@@ -145,7 +146,19 @@ func (gen *KubeconfigGenerator) storeKubeconfig(ctx context.Context, sa *v1.Serv
 	return nil
 }
 
-func CreateEncryptedFile(writer io.Writer, claim claim.Claim) error {
+func CreateEncryptedFile(claim claim.Claim) (string, error) {
+	tmpFile, _ := os.CreateTemp("", "kubeconfig")
+	defer tmpFile.Close()
+	defer os.Remove(tmpFile.Name())
+
+	if err := WriteEncryptedFile(tmpFile, claim); err != nil {
+		return "", fmt.Errorf("Create kubeconfig file fail: %w", err)
+	}
+
+	return tmpFile.Name(), nil
+}
+
+func WriteEncryptedFile(writer io.Writer, claim claim.Claim) error {
 	r, w := io.Pipe()
 	defer r.Close()
 
