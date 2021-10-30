@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/sethvargo/go-password v0.2.0
 	github.com/slack-go/slack v0.9.5
+	github.com/spf13/viper v1.9.0
 	github.com/yeka/zip v0.0.0-20180914125537-d046722c6feb
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	k8s.io/api v0.21.2
@@ -35,7 +36,6 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.9.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	golang.org/x/net v0.0.0-20210503060351-7fd8e65b6420 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
