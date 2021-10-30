@@ -14,7 +14,7 @@ type KubeconfigController struct {
 	slack *slack.Client
 }
 
-func (c *KubeconfigController) ShowClaimNotFound(channelId string) error {
+func (c *KubeconfigController) PostClaimNotFound(channelId string) error {
 	_, _, err := c.slack.PostMessage(channelId, slack.MsgOptionText("権限要求が見つかりませんでした。申し訳ございませんがもう一度申請を行い、改善しないようであれば管理者に連絡してください。", false))
 	if err != nil {
 		return fmt.Errorf("slack PostMessage failed, %w", err)

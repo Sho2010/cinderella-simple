@@ -187,7 +187,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 			}
 			claim, err := s.findClaim(callback.User.ID)
 			if err != nil {
-				if err := c.ShowClaimNotFound(callback.User.ID); err != nil {
+				if err := c.PostClaimNotFound(callback.User.ID); err != nil {
 					panic(err)
 				}
 				fmt.Println(err)
