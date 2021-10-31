@@ -11,7 +11,7 @@
 		},
 		{
 			"type": "section",
-			"block_id": "section-period",
+			"block_id": "select-period",
 			"text": {
 				"type": "mrkdwn",
 				"text": "接続時間"
@@ -49,14 +49,15 @@
 						"value": "180"
 					}
 				],
-				"action_id": "static_select-action"
+				"action_id": "select-period"
 			}
 		},
 		{
 			"type": "input",
 			"block_id": "input-namespace",
 			"element": {
-				"type": "plain_text_input"
+				"type": "plain_text_input",
+				"action_id": "namespace"
 			},
 			"label": {
 				"type": "plain_text",
@@ -68,6 +69,7 @@
 			"block_id": "input-description",
 			"element": {
 				"type": "plain_text_input",
+				"action_id": "description",
 				"multiline": true
 			},
 			"label": {
@@ -96,6 +98,7 @@
 		},
 		{
 			"type": "section",
+			"block_id": "radio-encrypt-type",
 			"text": {
 				"type": "mrkdwn",
 				"text": "*暗号化方式*"
@@ -109,7 +112,7 @@
 							"text": "Zip password",
 							"emoji": true
 						},
-						"value": "encrypt-zip"
+						"value": "zip"
 					},
 					{
 						"text": {
@@ -117,10 +120,10 @@
 							"text": "GPG",
 							"emoji": true
 						},
-						"value": "encrypt-gpg"
+						"value": "gpg"
 					}
 				],
-				"action_id": "radio_buttons-action"
+				"action_id": "encrypt-type"
 			}
 		},
 		{
@@ -135,7 +138,7 @@
 		},
 		{
 			"type": "input",
-			"block_id": "input-github-acc",
+			"block_id": "input-github-account",
 			"optional": true,
 			"element": {
 				"type": "plain_text_input",
