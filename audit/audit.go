@@ -76,7 +76,7 @@ func (b *AuditBroadcaster) initializeTeeChannel(in <-chan AuditEvent) {
 				cases[i].Chan = reflect.ValueOf(chs[i])
 				cases[i].Send = reflect.ValueOf(event)
 			}
-			for _ = range cases {
+			for range cases {
 				chosen, _, _ := reflect.Select(cases)
 				cases[chosen].Chan = reflect.ValueOf(nil)
 			}
