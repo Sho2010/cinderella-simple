@@ -153,12 +153,10 @@ func CreateEncryptedFile(claim claim.Claim) (string, error) {
 	}
 
 	defer tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
 
 	if err := WriteEncryptedFile(tmpFile, claim); err != nil {
 		return "", fmt.Errorf("Create kubeconfig file fail: %w", err)
 	}
-
 	return tmpFile.Name(), nil
 }
 
