@@ -1,21 +1,10 @@
 package claim
 
 import (
-	"errors"
 	"testing"
-)
 
-// func TestValidate(t *testing.T) {
-// 	c := Claim{
-// 		Subject:    "",
-// 		Namespaces: []string{"default"},
-// 	}
-// 	err := c.Validate()
-//
-// 	if !errors.Is(err, ErrorRequireSubject) {
-// 		t.Errorf("expecting  ErrorRequireNamespace")
-// 	}
-// }
+	"github.com/stretchr/testify/assert"
+)
 
 func TestValidateError(t *testing.T) {
 	var tests = []struct {
@@ -23,18 +12,17 @@ func TestValidateError(t *testing.T) {
 		expected error
 		given    Claim
 	}{
-		{"Expected raise ErrorRequireNamespace", ErrorRequireNamespace, Claim{Namespaces: []string{}, Subject: "subject"}},
-		{"Expected raise ErrorRequireSubject", ErrorRequireSubject, Claim{Namespaces: []string{""}, Subject: ""}},
-		//TODO: うまくこのテストがかけない
-		// {"Expected raise ErrorRequireSubject", &ClaimValidationError{}, Claim{Namespaces: []string{"invalid@namespace"}, Subject: "subject"}},
+		{"Expected raise ErrorRequireNamespace", ErrorRequireNamespace, &ClaimBase{Namespaces: []string{}, Subject: "subject"}},
+		{"Expected raise ErrorRequireSubject", ErrorRequireSubject, &ClaimBase{Namespaces: []string{}, Subject: ""}},
+		{"Expected raise Error RFC1123 format",
+			&ClaimValidationError{field: "Namespaces", errorType: "RFC1123"},
+			&ClaimBase{Namespaces: []string{"invalid@namespace"}, Subject: "subject"}},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.given.Validate()
-			if !errors.Is(err, tt.expected) {
-				t.Errorf("expected %s\n actual %v", tt.expected, err)
-			}
+			assert.ErrorIs(t, err, tt.expected)
 		})
 	}
 }

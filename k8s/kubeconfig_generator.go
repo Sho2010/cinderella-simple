@@ -147,7 +147,11 @@ func (gen *KubeconfigGenerator) storeKubeconfig(ctx context.Context, sa *v1.Serv
 }
 
 func CreateEncryptedFile(claim claim.Claim) (string, error) {
-	tmpFile, _ := os.CreateTemp("", "kubeconfig")
+	tmpFile, err := os.CreateTemp("", "kubeconfig")
+	if err != nil {
+		return "", fmt.Errorf("%w", err)
+	}
+
 	defer tmpFile.Close()
 	defer os.Remove(tmpFile.Name())
 
@@ -177,14 +181,14 @@ func WriteEncryptedFile(writer io.Writer, claim claim.Claim) error {
 
 	var enc encrypt.FileEncrypter
 
-	enc, err := encrypt.CreateEncrypter(claim.EncryptType)
+	enc, err := encrypt.CreateEncrypter(claim.GetEncryptType())
 	if err != nil {
 		return fmt.Errorf("Create encrypter failed: %w", err)
 	}
 
 	// TODO: もうちょっとパスワードの受け渡し方法考える
 	if zip, ok := enc.(*encrypt.ZipEncrypter); ok {
-		zip.Password = claim.ZipPassword
+		zip.Password = claim.GetZipPassword()
 	}
 
 	enc.Encrypt(writer, r)

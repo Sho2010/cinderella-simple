@@ -25,17 +25,19 @@ func (c *KubeconfigController) CallbackClaimNotFound(channelId string) error {
 func (c *KubeconfigController) Create(claim.Claim) {
 }
 
-func (c *KubeconfigController) SendSlackDM(claim claim.SlackClaim) error {
+func (c *KubeconfigController) SendSlackDM(claim claim.Claim) error {
 
-	if claim.EncryptType == encrypt.EncryptTypeZip {
+	if claim.GetEncryptType() == encrypt.EncryptTypeZip {
 		passwd, err := password.Generate(32, 10, 0, false, false)
 		if err != nil {
 			panic(err)
 		}
-		claim.ZipPassword = passwd
+		fmt.Println(passwd)
+		//FIXME
+		// claim.ZipPassword = passwd
 	}
 
-	filePath, err := k8s.CreateEncryptedFile(claim.Claim)
+	filePath, err := k8s.CreateEncryptedFile(claim)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}
@@ -47,10 +49,10 @@ func (c *KubeconfigController) SendSlackDM(claim claim.SlackClaim) error {
 			File: filePath,
 			// Reader:   file,
 			Filename:       "kubeconfig.zip",
-			Channels:       []string{claim.SlackUser.ID},
-			Filetype:       string(claim.EncryptType),
+			Channels:       []string{claim.GetSubject()},
+			Filetype:       string(claim.GetEncryptType()),
 			Title:          "kubeconfig",
-			InitialComment: fmt.Sprintf("password: `%s`", claim.ZipPassword), //FIXME: Zip password 前提のメッセージを返してしまっている
+			InitialComment: fmt.Sprintf("password: `%s`", "実装中"), //FIXME: Zip password 前提のメッセージを返してしまっている
 		})
 
 	if err != nil {

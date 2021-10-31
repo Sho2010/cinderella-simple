@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -15,19 +14,19 @@ import (
 type SlackApp struct {
 	Api    *slack.Client
 	Socket *socketmode.Client
-	Claims []claim.SlackClaim
 	// Administrators are slack app administrators. they can accept/reject permission claim.
 	administrators []string
+	ClaimManager
 }
 
 const (
-	ViewHomeCallbackID   = "cinderella_home"
-	ViewClaimCallbackID  = "cinderella_claim_modal"
-	ViewRejectCallbackID = "cinderella_claim_reject"
+	ViewHomeCallbackID        = "cinderella_home"
+	ViewClaimShowCallbackID   = "cinderella_claim_show"
+	ViewClaimSubmitCallbackID = "cinderella_claim_submit"
+	ViewRejectCallbackID      = "cinderella_claim_reject"
 )
 
 func NewSlackApp(administrators []string) *SlackApp {
-
 	api := slack.New(
 		os.Getenv("SLACK_BOT_TOKEN"),
 		slack.OptionAppLevelToken(os.Getenv("SLACK_APP_TOKEN")),
@@ -45,6 +44,7 @@ func NewSlackApp(administrators []string) *SlackApp {
 		Api:            api,
 		Socket:         socketMode,
 		administrators: administrators,
+		ClaimManager:   ClaimManager{},
 	}
 
 	return &s
@@ -111,10 +111,10 @@ func (s *SlackApp) Start() {
 					s.blockActionsHandler(callback)
 				case slack.InteractionTypeViewSubmission:
 					// See https://api.slack.com/apis/connections/socket-implement#modal
-					// modalに対してレスポンスを返す時のイベント
-
+					s.viewSubmissionHandler(callback)
 				case slack.InteractionTypeShortcut:
 				case slack.InteractionTypeDialogSubmission:
+				// Deprecated
 				default:
 
 				}
@@ -185,32 +185,50 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 			c := KubeconfigController{
 				slack: s.Api,
 			}
-			claim, err := s.findClaim(callback.User.ID)
+
+			claim, err := s.FindClaim(callback.User.ID)
 			if err != nil {
 				if err := c.CallbackClaimNotFound(callback.User.ID); err != nil {
 					panic(err)
 				}
-				fmt.Println(err)
 				return
 			}
-			c.SendSlackDM(claim)
+
+			if err := c.SendSlackDM(*claim); err != nil {
+				panic(err)
+			}
+
 		// case "open_settings":
 		// case "claim_details":
 		// case "claim_reject":
 		default:
 			s.Socket.Debugf("unsupported block action: %s", v.ActionID)
-
 		}
 	}
 }
 
-func (s *SlackApp) findClaim(userId string) (claim.SlackClaim, error) {
-	for _, claim := range s.Claims {
-		if claim.SlackUser.ID == userId {
-			return claim, nil
+func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) {
+	// InteractionTypeViewSubmission
+
+	s.Socket.Debugf("interaction event received!")
+	dumpInteractionCallback(callback)
+
+	switch callback.View.CallbackID {
+	case "cinderella_claim_show":
+		s.Socket.Debugf("Close claim modal views")
+
+		c := ClaimController{
+			Slack: s,
 		}
+		claim, err := c.Create(callback)
+		if err != nil {
+			return
+		}
+		s.ClaimManager.AddClaim(claim)
+
+	default:
+		s.Socket.Debugf("unsupported callbackID: %s", callback.View.CallbackID)
 	}
-	return claim.SlackClaim{}, fmt.Errorf("Could not find claim")
 }
 
 func (s *SlackApp) IsAdmin(slackID string) bool {

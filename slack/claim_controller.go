@@ -2,7 +2,10 @@ package slack
 
 import (
 	"log"
+	"time"
 
+	"github.com/Sho2010/cinderella-simple/claim"
+	"github.com/Sho2010/cinderella-simple/encrypt"
 	"github.com/slack-go/slack"
 )
 
@@ -22,7 +25,7 @@ func (c *ClaimController) Show(userID, triggerID string) {
 		Blocks:     *blocks,
 		Close:      slack.NewTextBlockObject("plain_text", "close", false, false),
 		Submit:     slack.NewTextBlockObject("plain_text", "submit", false, false),
-		CallbackID: ViewClaimCallbackID,
+		CallbackID: ViewClaimShowCallbackID,
 		ExternalID: c.generateExternalID(),
 	}
 
@@ -34,11 +37,39 @@ func (c *ClaimController) Show(userID, triggerID string) {
 	println(r)
 }
 
-func (c *ClaimController) Create() {
+func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Claim, error) {
 
+	// callback.View.State.Values[blockID][actionID].Value
+	vlaues := callback.View.State.Values
+
+	//TODO: Implement gpg
+	// if true {
+	// 	gh := encrypt.GithubKey{
+	// 		User: view.State.Values["input-github-account"]["github-account"].Value,
+	// 	}
+	//
+	// 	gpgOpt = claim.GPGEncryptOption{
+	// 		PublicKey: gh.PublicKeyString(),
+	// 	}
+	// }
+
+	encryptType := encrypt.EncryptType(vlaues["radio-encrypt-type"]["encrypt-type"].SelectedOption.Value)
+
+	claim := claim.SlackClaim{
+		Claim: &claim.ClaimBase{
+			ClaimDate:        time.Now(),
+			EncryptType:      encryptType,
+			Namespaces:       []string{vlaues["input-namespace"]["namespace"].Value},
+			State:            claim.Pending,
+			ZipEncryptOption: claim.ZipEncryptOption{},
+			GPGEncryptOption: claim.GPGEncryptOption{},
+		},
+		User: callback.User,
+	}
+
+	return &claim, nil
 }
 
 func (c *ClaimController) generateExternalID() string {
-	return generateExternalID(ViewClaimCallbackID)
+	return generateExternalID(ViewClaimShowCallbackID)
 }
-
