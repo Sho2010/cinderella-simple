@@ -2,6 +2,9 @@ package claim
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/Sho2010/cinderella-simple/audit"
 )
 
 //NOTE:
@@ -21,6 +24,12 @@ type ClaimManager struct {
 
 func (m *ClaimManager) addClaim(c Claim) {
 	m.claims = append(m.claims, c)
+
+	e := ClaimRegisterEvent{
+		message: fmt.Sprintf("Slack User[%s]によって権限が請求されました, %s ", c.GetName(), c.GetEmail()),
+		eventAt: time.Now(),
+	}
+	audit.PublishEvent(&e)
 }
 
 func (m *ClaimManager) findClaim(userId string) (*Claim, error) {
