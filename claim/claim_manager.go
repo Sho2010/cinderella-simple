@@ -32,20 +32,19 @@ func (m *ClaimManager) addClaim(c Claim) {
 	audit.PublishEvent(&e)
 }
 
-func (m *ClaimManager) findClaim(userId string) (*Claim, error) {
+func (m *ClaimManager) findClaim(userId string) *Claim {
 	for _, claim := range m.claims {
 		if claim.GetSubject() == userId {
-			return &claim, nil
+			return &claim
 		}
-
 	}
-	return nil, fmt.Errorf("Could not find claim")
+	return nil
 }
 
 func AddClaim(c Claim) {
 	cmInstance.addClaim(c)
 }
 
-func FindClaim(userId string) (*Claim, error) {
+func FindClaim(userId string) *Claim {
 	return cmInstance.findClaim(userId)
 }
