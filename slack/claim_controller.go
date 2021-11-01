@@ -28,13 +28,10 @@ func (c *ClaimController) Show(userID, triggerID string) {
 		CallbackID: ViewClaimShowCallbackID,
 		ExternalID: c.generateExternalID(),
 	}
-
-	r, err := c.Slack.Api.OpenView(triggerID, modal)
-	if err != nil {
-		//TODO error handling
-		log.Printf("とりあえずデバッグの為握りつぶす %v ", err)
+	if _, err := c.Slack.Api.OpenView(triggerID, modal); err != nil {
+		return fmt.Errorf("slack API OpenView error: %w", err)
 	}
-	println(r)
+	return nil
 }
 
 func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Claim, error) {
