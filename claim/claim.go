@@ -41,6 +41,7 @@ var (
 	ErrorRequireSubject   = &ClaimValidationError{mes: "Require Subject field", field: "Subject", errorType: "empty value"}
 )
 
+//TODO: implement period(制限時間)
 type Claim interface {
 	GetClaimDate() time.Time
 	GetDescription() string

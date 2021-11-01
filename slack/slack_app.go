@@ -241,7 +241,12 @@ func (s *SlackApp) IsAdmin(slackID string) bool {
 }
 
 // NOTE;
+
+// views.update、views.push API メソッドはモーダル内での "block_actions" リクエストを受信したときに使用するものであり、
+// "view_submission" 時にモーダルを操作するための API ではありません
+//
 // validation errorとかでModalの更新が必要な場合
 // s.Api.UpdateView()
+//
 // modalから更にモーダルを呼ぶ
 // s.Api.PublishView
