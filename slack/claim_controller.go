@@ -42,16 +42,6 @@ func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Clai
 	// callback.View.State.Values[blockID][actionID].Value
 	vlaues := callback.View.State.Values
 
-	//TODO: Implement gpg
-	// if true {
-	// 	gh := encrypt.GithubKey{
-	// 		User: view.State.Values["input-github-account"]["github-account"].Value,
-	// 	}
-	//
-	// 	gpgOpt = claim.GPGEncryptOption{
-	// 		PublicKey: gh.PublicKeyString(),
-	// 	}
-	// }
 
 	encryptType := encrypt.EncryptType(vlaues["radio-encrypt-type"]["encrypt-type"].SelectedOption.Value)
 
@@ -72,4 +62,17 @@ func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Clai
 
 func (c *ClaimController) generateExternalID() string {
 	return generateExternalID(ViewClaimShowCallbackID)
+}
+
+func (c *ClaimController) gpg() {
+	//TODO: Implement gpg
+	// if true {
+	// 	gh := encrypt.GithubKey{
+	// 		User: view.State.Values["input-github-account"]["github-account"].Value,
+	// 	}
+	//
+	// 	gpgOpt = claim.GPGEncryptOption{
+	// 		PublicKey: gh.PublicKeyString(),
+	// 	}
+	// }
 }
