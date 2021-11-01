@@ -19,7 +19,7 @@ func (e *CleanupEvent) GetMessage() string {
 // 	return e.description
 // }
 
-func (e *CleanupEvent) GetTime() time.Time {
+func (e *CleanupEvent) EventAt() time.Time {
 	return e.deleteTime
 }
 

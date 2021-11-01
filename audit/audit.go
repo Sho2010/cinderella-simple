@@ -12,7 +12,7 @@ var auditCh = make(chan AuditEvent)
 
 type AuditEvent interface {
 	GetMessage() string
-	GetTime() time.Time
+	EventAt() time.Time
 	// GetType()
 }
 
@@ -37,7 +37,7 @@ func (b *AuditBroadcaster) Start() {
 	fmt.Println("Start audit event broadcasting")
 
 	//debug
-	b.testInit()
+	// b.testInit()
 
 	b.initializeTeeChannel(auditCh)
 
@@ -46,8 +46,7 @@ func (b *AuditBroadcaster) Start() {
 func (b *AuditBroadcaster) testInit() {
 	b.EventHandlers = []AuditEventHandler{
 		NewLogHandler(os.Stdout),
-		NewLogHandler(os.Stderr),
-		NewSlackHandler(),
+		// NewSlackHandler(),
 	}
 }
 
