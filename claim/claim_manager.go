@@ -48,3 +48,7 @@ func AddClaim(c Claim) {
 func FindClaim(userId string) *Claim {
 	return cmInstance.findClaim(userId)
 }
+
+func ListClaims() []Claim {
+	return cmInstance.claims
+}
