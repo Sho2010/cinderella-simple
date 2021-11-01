@@ -1,7 +1,7 @@
 package slack
 
 import (
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/Sho2010/cinderella-simple/claim"
@@ -13,10 +13,15 @@ type ClaimController struct {
 	Slack *SlackApp
 }
 
-func (c *ClaimController) Show(userID, triggerID string) {
+func (c *ClaimController) Show(userID, triggerID string) error {
+
+	if claim := claim.FindClaim(userID); claim != nil {
+		//TODO: 既に申請済みの場合エラーを返す
+	}
+
 	blocks, err := BuildClaimModalView()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("BuildClaimModalView error: %w", err)
 	}
 
 	modal := slack.ModalViewRequest{
@@ -35,15 +40,20 @@ func (c *ClaimController) Show(userID, triggerID string) {
 }
 
 func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Claim, error) {
-
+	// Viewからの値の取り出し方
 	// callback.View.State.Values[blockID][actionID].Value
 	vlaues := callback.View.State.Values
 
+	if claim := claim.FindClaim(callback.User.ID); claim != nil {
+		return nil, fmt.Errorf("Claim already exist!")
+	}
 
 	encryptType := encrypt.EncryptType(vlaues["radio-encrypt-type"]["encrypt-type"].SelectedOption.Value)
 
 	claim := claim.SlackClaim{
 		Claim: &claim.ClaimBase{
+			//FIXME: GetSubject()はslack.User から返すのにClaimBase.Validation()がSubjectを参照するせいでエラーになる
+			Subject:          callback.User.ID,
 			ClaimDate:        time.Now(),
 			EncryptType:      encryptType,
 			Namespaces:       []string{vlaues["input-namespace"]["namespace"].Value},
@@ -52,6 +62,10 @@ func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Clai
 			GPGEncryptOption: claim.GPGEncryptOption{},
 		},
 		User: callback.User,
+	}
+
+	if err := claim.Validate(); err != nil {
+		return nil, err
 	}
 
 	return &claim, nil

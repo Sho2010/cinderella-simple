@@ -1,10 +1,12 @@
 package slack
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -16,7 +18,6 @@ type SlackApp struct {
 	Socket *socketmode.Client
 	// Administrators are slack app administrators. they can accept/reject permission claim.
 	administrators []string
-	ClaimManager
 }
 
 const (
@@ -44,7 +45,6 @@ func NewSlackApp(administrators []string) *SlackApp {
 		Api:            api,
 		Socket:         socketMode,
 		administrators: administrators,
-		ClaimManager:   ClaimManager{},
 	}
 
 	return &s
@@ -62,7 +62,7 @@ func (s *SlackApp) Start() {
 					continue
 				}
 
-				fmt.Printf("Event received: %+v\n", eventsAPIEvent)
+				// fmt.Printf("Event received: %+v\n", eventsAPIEvent)
 
 				s.Socket.Ack(*evt.Request)
 
@@ -79,7 +79,6 @@ func (s *SlackApp) Start() {
 						fmt.Printf("user %q joined to channel %q", ev.User, ev.Channel)
 
 					case *slackevents.AppHomeOpenedEvent:
-						println("----------------------------------------AppHomeOpened")
 						s.appHomeOpenedHandler(ev)
 					}
 
@@ -96,6 +95,10 @@ func (s *SlackApp) Start() {
 
 				//DEBUG
 				// fmt.Printf("Interaction received: %+v\n", callback)
+				fmt.Println("******************************")
+				fmt.Printf("* callback_type: %s\n", callback.Type)
+				fmt.Printf("* accepts_response_payload: %v\n", evt.Request.AcceptsResponsePayload)
+				fmt.Println("******************************")
 
 				var payload interface{}
 
@@ -105,12 +108,11 @@ func (s *SlackApp) Start() {
 					s.blockActionsHandler(callback)
 				case slack.InteractionTypeViewSubmission:
 					// See https://api.slack.com/apis/connections/socket-implement#modal
-					s.viewSubmissionHandler(callback)
+					payload = s.viewSubmissionHandler(callback)
 				case slack.InteractionTypeShortcut:
-				case slack.InteractionTypeDialogSubmission:
-				// Deprecated
+				case slack.InteractionTypeDialogSubmission: // Deprecated
 				default:
-
+					s.Socket.Debugf("no handled event: %s", callback.Type)
 				}
 
 				s.Socket.Ack(*evt.Request, payload)
@@ -142,7 +144,6 @@ func (s *SlackApp) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
 func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 
 	s.Socket.Debugf("button clicked!")
-
 	dumpInteractionCallback(callback)
 
 	for _, v := range callback.ActionCallback.BlockActions {
@@ -151,18 +152,18 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 			c := ClaimController{
 				Slack: s,
 			}
+
 			c.Show(callback.User.ID, callback.TriggerID)
 		case "create_kubeconfig":
 			c := KubeconfigController{
 				slack: s.Api,
 			}
 
-			claim, err := s.FindClaim(callback.User.ID)
-			if err != nil {
+			claim := claim.FindClaim(callback.User.ID)
+			if claim == nil {
 				if err := c.CallbackClaimNotFound(callback.User.ID); err != nil {
 					panic(err)
 				}
-				return
 			}
 
 			if err := c.SendSlackDM(*claim); err != nil {
@@ -178,9 +179,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 	}
 }
 
-func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) {
-	// InteractionTypeViewSubmission
-
+func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *slack.ViewSubmissionResponse {
 	s.Socket.Debugf("interaction event received!")
 	dumpInteractionCallback(callback)
 
@@ -191,14 +190,22 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) {
 		c := ClaimController{
 			Slack: s,
 		}
-		claim, err := c.Create(callback)
+		createdClaim, err := c.Create(callback)
 		if err != nil {
-			return
+			var validateErr *claim.ClaimValidationError
+			if errors.As(err, &validateErr) {
+				//TODO: 暫定処理 validation error時にちゃんと適切なフィールドにエラーを出す
+				fmt.Println(err)
+				return debugErrorsViewSubmissionResponse()
+			}
+			return nil
 		}
-		s.ClaimManager.AddClaim(claim)
+		claim.AddClaim(createdClaim)
+		return nil
 
 	default:
 		s.Socket.Debugf("unsupported callbackID: %s", callback.View.CallbackID)
+		return nil
 	}
 }
 
