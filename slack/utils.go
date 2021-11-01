@@ -10,8 +10,7 @@ import (
 
 func generateExternalID(base string) string {
 	// これあってんのかな？
-	t := strconv.FormatInt(time.Now().UTC().UnixNano(), 10)
-	return fmt.Sprintf("%s.%s", base, t)
+	return fmt.Sprintf("%s.%s", base, strconv.FormatInt(time.Now().UTC().UnixNano(), 10))
 }
 
 func dumpInteractionCallback(callback slack.InteractionCallback) {
