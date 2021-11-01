@@ -114,38 +114,7 @@ func (s *SlackApp) Start() {
 				}
 
 				s.Socket.Ack(*evt.Request, payload)
-			case socketmode.EventTypeSlashCommand:
-				cmd, ok := evt.Data.(slack.SlashCommand)
-				if !ok {
-					fmt.Printf("Ignored %+v\n", evt)
 
-					continue
-				}
-
-				s.Socket.Debugf("Slash command received: %+v", cmd)
-
-				payload := map[string]interface{}{
-					"blocks": []slack.Block{
-						slack.NewSectionBlock(
-							&slack.TextBlockObject{
-								Type: slack.MarkdownType,
-								Text: "foo",
-							},
-							nil,
-							slack.NewAccessory(
-								slack.NewButtonBlockElement(
-									"",
-									"somevalue",
-									&slack.TextBlockObject{
-										Type: slack.PlainTextType,
-										Text: "bar",
-									},
-								),
-							),
-						),
-					}}
-
-				s.Socket.Ack(*evt.Request, payload)
 			case socketmode.EventTypeConnecting:
 				fmt.Println("Connecting to Slack with Socket Mode...")
 			case socketmode.EventTypeConnectionError:
