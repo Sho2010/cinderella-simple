@@ -54,12 +54,6 @@ func (s *SlackApp) Start() {
 	go func() {
 		for evt := range s.Socket.Events {
 			switch evt.Type {
-			case socketmode.EventTypeConnecting:
-				fmt.Println("Connecting to Slack with Socket Mode...")
-			case socketmode.EventTypeConnectionError:
-				fmt.Println("Connection failed. Retrying later...")
-			case socketmode.EventTypeConnected:
-				fmt.Println("Connected to Slack with Socket Mode.")
 			case socketmode.EventTypeEventsAPI:
 				eventsAPIEvent, ok := evt.Data.(slackevents.EventsAPIEvent)
 				if !ok {
@@ -152,6 +146,14 @@ func (s *SlackApp) Start() {
 					}}
 
 				s.Socket.Ack(*evt.Request, payload)
+			case socketmode.EventTypeConnecting:
+				fmt.Println("Connecting to Slack with Socket Mode...")
+			case socketmode.EventTypeConnectionError:
+				fmt.Println("Connection failed. Retrying later...")
+			case socketmode.EventTypeConnected:
+				fmt.Println("Connected to Slack with Socket Mode.")
+			case socketmode.EventTypeHello:
+				fmt.Println("Hello event received.")
 			default:
 				fmt.Fprintf(os.Stderr, "Unexpected event type received: %s\n", evt.Type)
 			}
