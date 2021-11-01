@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 
+	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 )
@@ -23,7 +24,6 @@ type HomeController struct {
 	slack *slack.Client
 }
 
-// AppHomeOpenedEventに依存関係持ってるの微妙な気もする...
 func (c *HomeController) Show(e *slackevents.AppHomeOpenedEvent) error {
 	// NOTE: hashに関して
 	// A string that represents view state to protect against possible race conditions.
@@ -39,9 +39,10 @@ func (c *HomeController) Show(e *slackevents.AppHomeOpenedEvent) error {
 	// おすすめは、ユーザー名+タイムスタンプ。
 	// これだと、よほどのことがない限り被らず安心です。
 
-	blocks, err := c.buildHomeView()
+	//TODO: 管理者固定になってる
+	blocks, err := c.buildHomeView(true)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("HomeView build failed: %w", err)
 	}
 
 	_, err = c.slack.PublishView(e.User,
@@ -54,19 +55,78 @@ func (c *HomeController) Show(e *slackevents.AppHomeOpenedEvent) error {
 		}, "")
 
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("Slack PublishView failed: %w", err)
 	}
 	return nil
 }
 
-func (c *HomeController) buildHomeView() (*slack.Blocks, error) {
+func (c *HomeController) buildHomeView(isAdmin bool) (*slack.Blocks, error) {
 	blocks := slack.Blocks{}
 
 	if err := blocks.UnmarshalJSON(homeViewJson); err != nil {
 		return nil, fmt.Errorf("Blocks marshal error %w", err)
 	}
 
+	if isAdmin {
+		adminBlocks, err := c.buildAdminView()
+		if err != nil {
+			return nil, err
+		}
+		blocks.BlockSet = append(blocks.BlockSet, adminBlocks...)
+
+	} else {
+		generalBlocks, err := c.buildGeneralView()
+		if err != nil {
+			return nil, err
+		}
+		blocks.BlockSet = append(blocks.BlockSet, generalBlocks...)
+	}
+
 	return &blocks, nil
+}
+
+func (c *HomeController) buildClaims() ([]slack.Block, error) {
+	list := claim.ListClaims()
+	blocks := make([]slack.Block, len(list))
+
+	for i, v := range list {
+		if slackClaim, ok := v.(*claim.SlackClaim); ok {
+			b, err := slackClaim.ToBlock()
+			if err != nil {
+				return nil, fmt.Errorf("claim to slack.block fail: %w", err)
+			}
+			blocks[i] = b
+		}
+	}
+	return blocks, nil
+}
+
+func (c *HomeController) buildAdminView() ([]slack.Block, error) {
+	headerBlocks := slack.Blocks{}
+
+	if err := headerBlocks.UnmarshalJSON(homeAdminBlocksJson); err != nil {
+		return nil, fmt.Errorf("Home admin view header blocks marshal error %w", err)
+	}
+
+	claimBlocks, err := c.buildClaims()
+	if err != nil {
+		return nil, fmt.Errorf("Home admin view claim blocks build error %w", err)
+	}
+
+	blocks := headerBlocks.BlockSet
+	blocks = append(blocks, claimBlocks...)
+
+	return blocks, nil
+}
+
+func (c *HomeController) buildGeneralView() ([]slack.Block, error) {
+	blocks := slack.Blocks{}
+
+	if err := blocks.UnmarshalJSON(homeViewJson); err != nil {
+		return nil, fmt.Errorf("Home general blocks marshal error %w", err)
+	}
+
+	return blocks.BlockSet, nil
 }
 
 func (c *HomeController) generateExternalID() string {
