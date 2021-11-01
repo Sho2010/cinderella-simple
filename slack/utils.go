@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
 )
 
@@ -16,6 +17,7 @@ func generateExternalID(base string) string {
 func dumpInteractionCallback(callback slack.InteractionCallback) {
 	fmt.Printf("ActionID:%s\n", callback.ActionID)
 	fmt.Printf("TriggerID:%s\n", callback.TriggerID)
+	fmt.Printf("View.CallbackID:%s \n", callback.View.CallbackID)
 
 	for _, v := range callback.ActionCallback.AttachmentActions {
 		fmt.Println("---AttachmentActions element")
@@ -31,3 +33,53 @@ func dumpInteractionCallback(callback slack.InteractionCallback) {
 		fmt.Println("---")
 	}
 }
+
+func debugPushViewSubmissionResponse() *slack.ViewSubmissionResponse {
+	return slack.NewPushViewSubmissionResponse(&slack.ModalViewRequest{
+		Type:  slack.VTModal,
+		Title: slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false),
+		Blocks: slack.Blocks{
+			BlockSet: []slack.Block{
+				slack.NewContextBlock(
+					"context_block_id",
+					slack.NewTextBlockObject("plain_text", "Context text", false, false),
+					slack.NewImageBlockElement("image_url", "alt_text"),
+				),
+			},
+		},
+	})
+}
+
+func debugErrorsViewSubmissionResponse() *slack.ViewSubmissionResponse {
+	// このエラー処理は、block: { "type": "input" }にしか反応しないことに注意する。
+	// ! select box, radio とかには利用できない
+	return slack.NewErrorsViewSubmissionResponse(
+		map[string]string{
+			"input-namespace": "test_error",
+		},
+	)
+}
+
+func debugUpdateViewSubmissionResponse() *slack.ViewSubmissionResponse {
+	return slack.NewUpdateViewSubmissionResponse(&slack.ModalViewRequest{
+		Type:       slack.VTModal,
+		Title:      slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false),
+		CallbackID: ViewHomeCallbackID,
+		Blocks: slack.Blocks{BlockSet: []slack.Block{
+			// slack.NewFileBlock("", "external_string", "source_string"),
+			// slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false),
+			slack.NewSectionBlock(slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false), nil, nil),
+		}}})
+}
+
+// _, err := s.Api.UpdateView(
+// 	slack.ModalViewRequest{
+// 		Type:  slack.VTModal,
+// 		Title: slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false),
+// 		// CallbackID: ViewHomeCallbackID,
+// 		CallbackID: "test",
+// 		Blocks: slack.Blocks{BlockSet: []slack.Block{
+// 			// slack.NewFileBlock("", "external_string", "source_string"),
+// 			// slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false),
+// 			slack.NewSectionBlock(slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false), nil, nil),
+// 		}}}, "dkajfjdajfda", "130321089730192739172392", callback.Container.ViewID)
