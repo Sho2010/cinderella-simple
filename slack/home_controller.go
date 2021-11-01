@@ -8,8 +8,16 @@ import (
 	"github.com/slack-go/slack/slackevents"
 )
 
-//go:embed views/home.json
-var homeViewJson []byte
+var (
+	//go:embed views/home.json
+	homeViewJson []byte
+
+	//go:embed views/home_general.json
+	homeGeneralBlocksJson []byte
+
+	//go:embed views/home_admin.json
+	homeAdminBlocksJson []byte
+)
 
 type HomeController struct {
 	slack *slack.Client
