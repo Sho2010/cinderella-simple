@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
 )
 
