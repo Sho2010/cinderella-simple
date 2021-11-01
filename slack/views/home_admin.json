@@ -1,0 +1,12 @@
+[
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*Pending Claims*"
+			}
+		},
+		{
+			"type": "divider"
+		}
+]

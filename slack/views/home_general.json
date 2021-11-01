@@ -1,0 +1,50 @@
+[
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*Pending Claims*"
+			}
+		},
+		{
+			"type": "divider"
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "Claimer: *<@U04L97CP5>*\nPeriod: *30min*\nClaim Date: *2021/10/26 12:00:00*\nNamespace: *awesome*\nShort description: デバッグしたい"
+			},
+			"accessory": {
+				"type": "image",
+				"image_url": "https://api.slack.com/img/blocks/bkb_template_images/creditcard.png",
+				"alt_text": "credit card"
+			}
+		},
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "View Details",
+						"emoji": true
+					},
+					"value": "detail-value-PH",
+					"action_id": "claim_details"
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Reject Claim",
+						"emoji": true
+					},
+					"style": "danger",
+					"value": "claim-reject-PH",
+					"action_id": "claim_reject"
+				}
+			]
+		}
+]

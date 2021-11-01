@@ -1,0 +1,28 @@
+[
+		{
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "View Details",
+						"emoji": true
+					},
+					"value": "detail-value-PH",
+					"action_id": "claim_details"
+				},
+				{
+					"type": "button",
+					"text": {
+						"type": "plain_text",
+						"text": "Reject Claim",
+						"emoji": true
+					},
+					"style": "danger",
+					"value": "claim-reject-PH",
+					"action_id": "claim_reject"
+				}
+			]
+		}
+]
