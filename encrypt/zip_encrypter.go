@@ -16,7 +16,7 @@ type ZipEncrypter struct {
 func (enc *ZipEncrypter) Encrypt(w io.Writer, r io.Reader) error {
 
 	if len(enc.Password) == 0 {
-		fmt.Printf("!!!Zip password blank")
+		fmt.Println("!!!Zip password blank")
 		passwd, err := password.Generate(32, 10, 10, false, false)
 		if err != nil {
 			return fmt.Errorf("password generate fail: %w", err)
