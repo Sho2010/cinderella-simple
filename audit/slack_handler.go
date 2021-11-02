@@ -10,7 +10,8 @@ import (
 
 type SlackHandler struct {
 	AuditEventHandler
-	client *slack.Client
+	client       *slack.Client
+	auditChannel string
 }
 
 func NewSlackHandler() *SlackHandler {
@@ -18,8 +19,10 @@ func NewSlackHandler() *SlackHandler {
 		os.Getenv("SLACK_BOT_TOKEN"),
 		slack.OptionAppLevelToken(os.Getenv("SLACK_APP_TOKEN")),
 	)
+
 	return &SlackHandler{
-		client: client,
+		client:       client,
+		auditChannel: "#bot-test", //TODO: change default
 	}
 }
 
@@ -31,7 +34,7 @@ func (h *SlackHandler) Start(event <-chan AuditEvent) {
 		log.Println("[SlackHandler]Audit event received and post message to slack")
 
 		//TODO: メッセージの整形
-		_, _, err := h.client.PostMessage("#bot-test", slack.MsgOptionText(e.GetMessage(), true))
+		_, _, err := h.client.PostMessage(h.auditChannel, slack.MsgOptionText(e.GetMessage(), true))
 		if err != nil {
 			//TODO: error handle
 			panic(err)
