@@ -21,6 +21,6 @@ func (h *LogHandler) Start(ch <-chan AuditEvent) {
 
 	for e := range ch {
 		fmt.Println("[LogHandler] Audit event received and write data")
-		fmt.Printf("Dump description:%s\n", e.GetMessage())
+		fmt.Fprintf(h.LogWriter, "Dump Message:%s\n", e.GetMessage())
 	}
 }
