@@ -3,7 +3,7 @@
 			"type": "section",
 			"text": {
 				"type": "mrkdwn",
-				"text": "*:wave: hiya <@U04L97CP5>, シンデレラへようこそ :tada:*\n\nここでははk8s Production環境への\n一時的な権限を要求することができます。"
+				"text": "*:wave: hiya <@U04L97CP5>, シンデレラへようこそ :tada:*\n\nここではk8s Production環境への\n一時的な権限を要求することができます。"
 			},
 			"accessory": {
 				"type": "button",
