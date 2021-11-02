@@ -138,7 +138,7 @@ func (s *SlackApp) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
 	c := HomeController{
 		slack: s.Api,
 	}
-	c.Show(e)
+	c.Show(e.User)
 }
 
 func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
@@ -153,7 +153,10 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 				Slack: s,
 			}
 
-			c.Show(callback.User.ID, callback.TriggerID)
+			if err := c.Show(callback.User.ID, callback.TriggerID); err != nil {
+				panic(err)
+			}
+
 		case "create_kubeconfig":
 			c := KubeconfigController{
 				slack: s.Api,
@@ -184,7 +187,7 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *sl
 	dumpInteractionCallback(callback)
 
 	switch callback.View.CallbackID {
-	case "cinderella_claim_show":
+	case "cinderella_claim_show": //claim modalが閉じたときのハンドラ
 		s.Socket.Debugf("Close claim modal views")
 
 		c := ClaimController{
@@ -198,9 +201,15 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *sl
 				fmt.Println(err)
 				return debugErrorsViewSubmissionResponse()
 			}
+			//TODO: validationエラー時以外のエラーハンドル
 			return nil
 		}
 		claim.AddClaim(createdClaim)
+
+		//HomeTabの更新
+		h := HomeController{slack: s.Api}
+		h.Update(callback.User.ID)
+
 		return nil
 
 	default:

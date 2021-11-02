@@ -6,7 +6,6 @@ import (
 
 	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
-	"github.com/slack-go/slack/slackevents"
 )
 
 var (
@@ -24,7 +23,7 @@ type HomeController struct {
 	slack *slack.Client
 }
 
-func (c *HomeController) Show(e *slackevents.AppHomeOpenedEvent) error {
+func (c *HomeController) Show(userID string) error {
 	// NOTE: hashに関して
 	// A string that represents view state to protect against possible race conditions.
 
@@ -45,7 +44,7 @@ func (c *HomeController) Show(e *slackevents.AppHomeOpenedEvent) error {
 		return fmt.Errorf("HomeView build failed: %w", err)
 	}
 
-	_, err = c.slack.PublishView(e.User,
+	_, err = c.slack.PublishView(userID,
 		slack.HomeTabViewRequest{
 			Type:            slack.VTHomeTab,
 			Blocks:          *blocks,
@@ -58,6 +57,10 @@ func (c *HomeController) Show(e *slackevents.AppHomeOpenedEvent) error {
 		return fmt.Errorf("Slack PublishView failed: %w", err)
 	}
 	return nil
+}
+
+func (c *HomeController) Update(userID string) error {
+	return c.Show(userID)
 }
 
 func (c *HomeController) buildHomeView(isAdmin bool) (*slack.Blocks, error) {
