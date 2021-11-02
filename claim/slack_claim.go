@@ -37,8 +37,8 @@ func (c *SlackClaim) GetEmail() string {
 
 func (c *SlackClaim) ToBlock() (slack.Block, error) {
 	//  "text": "Claimer: *<@U04L97CP5>*\nPeriod: *30min*\nClaim Date: *2021/10/26 12:00:00*\nNamespace: *awesome*\nShort description: デバッグしたい"
-	text := fmt.Sprintf("Claimer: *%s*\nPeriod: *%s*\nClaim Date: *%s*\nNamespace: *%s*\nShort description: %s",
-		c.User.ID,
+	text := fmt.Sprintf("Claimer: *@%s*\nPeriod: *%s*\nClaim Date: *%s*\nNamespace: *%s*\nShort description: %s",
+		c.User.Name,
 		"30min", // TODO: implement me
 		c.GetClaimDate().Format("2006/01/02 15:04:05"),
 		fmt.Sprintf("%+q", c.GetNamespaces()),
