@@ -54,6 +54,7 @@ func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Clai
 		Claim: &claim.ClaimBase{
 			//FIXME: GetSubject()はslack.User から返すのにClaimBase.Validation()がSubjectを参照するせいでエラーになる
 			Subject:          callback.User.ID,
+			Description:      vlaues["input-description"]["description"].Value,
 			ClaimDate:        time.Now(),
 			EncryptType:      encryptType,
 			Namespaces:       []string{vlaues["input-namespace"]["namespace"].Value},
