@@ -73,7 +73,7 @@ func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Clai
 }
 
 func (c *ClaimController) generateExternalID() string {
-	return generateExternalID(ViewClaimShowCallbackID)
+	return generateExternalID(ViewClaimCallbackID)
 }
 
 func (c *ClaimController) gpg() {

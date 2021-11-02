@@ -22,7 +22,7 @@ type SlackApp struct {
 
 const (
 	ViewHomeCallbackID        = "cinderella_home"
-	ViewClaimShowCallbackID   = "cinderella_claim_show"
+	ViewClaimCallbackID       = "cinderella_claim"
 	ViewClaimSubmitCallbackID = "cinderella_claim_submit"
 	ViewRejectCallbackID      = "cinderella_claim_reject"
 )
@@ -187,9 +187,7 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *sl
 	dumpInteractionCallback(callback)
 
 	switch callback.View.CallbackID {
-	case "cinderella_claim_show": //claim modalが閉じたときのハンドラ
-		s.Socket.Debugf("Close claim modal views")
-
+	case ViewClaimCallbackID: // Claim modal viewのインタラクションイベント
 		c := ClaimController{
 			Slack: s,
 		}
