@@ -10,10 +10,19 @@ import (
 // Global Channel
 var auditCh = make(chan AuditEvent)
 
+type AuditType string
+
+// AuditType
+const (
+	AuditTypeAcceptClaim AuditType = "accept_claim"
+	AuditTypeRejectClaim AuditType = "reject_claim"
+	AuditTypeExpireClaim AuditType = "expire_claim"
+)
+
 type AuditEvent interface {
 	GetMessage() string
 	EventAt() time.Time
-	// GetType()
+	// GetType() AuditType
 }
 
 // AuditEventHandler can processing received audit event
@@ -82,4 +91,3 @@ func (b *AuditBroadcaster) initializeTeeChannel(in <-chan AuditEvent) {
 		}
 	}()
 }
-
