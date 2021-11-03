@@ -13,10 +13,10 @@ import (
 type ClaimStatus string
 
 const (
-	Accepted ClaimStatus = "accepted"
-	Rejected ClaimStatus = "rejected"
-	Pending  ClaimStatus = "pending"
-	Expired  ClaimStatus = "expired"
+	ClaimStatusAccepted ClaimStatus = "accepted"
+	ClaimStatusRejected ClaimStatus = "rejected"
+	ClaimStatusPending  ClaimStatus = "pending"
+	ClaimStatusExpired  ClaimStatus = "expired"
 )
 
 type ClaimValidationError struct {

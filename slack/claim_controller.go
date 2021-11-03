@@ -30,7 +30,7 @@ func (c *ClaimController) Show(userID, triggerID string) error {
 		Blocks:     *blocks,
 		Close:      slack.NewTextBlockObject("plain_text", "close", false, false),
 		Submit:     slack.NewTextBlockObject("plain_text", "submit", false, false),
-		CallbackID: ViewClaimShowCallbackID,
+		CallbackID: ViewClaimCallbackID,
 		ExternalID: c.generateExternalID(),
 	}
 	if _, err := c.Slack.Api.OpenView(triggerID, modal); err != nil {
@@ -58,7 +58,7 @@ func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Clai
 			ClaimDate:        time.Now(),
 			EncryptType:      encryptType,
 			Namespaces:       []string{vlaues["input-namespace"]["namespace"].Value},
-			State:            claim.Pending,
+			State:            claim.ClaimStatusPending,
 			ZipEncryptOption: claim.ZipEncryptOption{},
 			GPGEncryptOption: claim.GPGEncryptOption{},
 		},

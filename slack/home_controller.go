@@ -76,7 +76,6 @@ func (c *HomeController) buildHomeView(isAdmin bool) (*slack.Blocks, error) {
 			return nil, err
 		}
 		blocks.BlockSet = append(blocks.BlockSet, adminBlocks...)
-
 	} else {
 		generalBlocks, err := c.buildGeneralView()
 		if err != nil {
@@ -123,13 +122,22 @@ func (c *HomeController) buildAdminView() ([]slack.Block, error) {
 }
 
 func (c *HomeController) buildGeneralView() ([]slack.Block, error) {
-	blocks := slack.Blocks{}
 
-	if err := blocks.UnmarshalJSON(homeViewJson); err != nil {
+	myClaim := claim.FindClaim("id")
+	if myClaim == nil {
+		return []slack.Block{}, nil
+	}
+
+	blocks := slack.Blocks{}
+	if err := blocks.UnmarshalJSON(homeGeneralBlocksJson); err != nil {
 		return nil, fmt.Errorf("Home general blocks marshal error %w", err)
 	}
 
-	return blocks.BlockSet, nil
+	// if myClaim.GetState() == claim.ClaimStatusPending {
+	// 	fmt.Println("debug")
+	// }
+
+	return []slack.Block{}, nil
 }
 
 func (c *HomeController) generateExternalID() string {

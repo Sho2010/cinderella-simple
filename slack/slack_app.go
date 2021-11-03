@@ -169,7 +169,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 				}
 			}
 
-			if err := c.SendSlackDM(*claim); err != nil {
+			if err := c.SendSlackDM(claim); err != nil {
 				panic(err)
 			}
 
