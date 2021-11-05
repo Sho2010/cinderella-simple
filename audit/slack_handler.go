@@ -9,10 +9,11 @@ import (
 )
 
 type SlackHandler struct {
-	AuditEventHandler
 	client       *slack.Client
 	auditChannel string
 }
+
+var _ AuditEventHandler = (*SlackHandler)(nil)
 
 func NewSlackHandler() *SlackHandler {
 	client := slack.New(

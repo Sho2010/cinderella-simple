@@ -6,9 +6,10 @@ import (
 )
 
 type LogHandler struct {
-	AuditEventHandler
 	LogWriter io.Writer
 }
+
+var _ AuditEventHandler = (*LogHandler)(nil)
 
 func NewLogHandler(w io.Writer) *LogHandler {
 	h := LogHandler{}

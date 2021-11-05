@@ -10,6 +10,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var _ AuditEventHandler = (*KubernetesEventHandler)(nil)
+
 // NOTE
 // 多分EventRecorderを使っていい感じにイベントを記録する
 // https://github.com/kubernetes/client-go/blob/master/tools/record/event.go#L317-L320
