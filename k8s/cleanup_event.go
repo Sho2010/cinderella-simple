@@ -11,6 +11,9 @@ type CleanupEvent struct {
 	description string
 }
 
+// Verify interface compliance
+var _ audit.AuditEvent = (*CleanupEvent)(nil)
+
 func (e *CleanupEvent) GetMessage() string {
 	return e.description
 }
