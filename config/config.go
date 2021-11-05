@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-var instance *Config
+var _instance *Config
 
 func init() {
 	// //TODO: 環境変数による上書き処理
-	instance = LoadConfig()
+	_instance = LoadConfig()
 }
 
 type Config struct {
@@ -25,7 +25,7 @@ type Config struct {
 }
 
 func GetConfig() *Config {
-	return instance
+	return _instance
 }
 
 func LoadConfig() *Config {

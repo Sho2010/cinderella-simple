@@ -7,8 +7,7 @@ import (
 	"time"
 )
 
-// Global Channel
-var auditCh = make(chan AuditEvent)
+var _auditCh = make(chan AuditEvent)
 
 type AuditType string
 
@@ -39,7 +38,7 @@ type AuditBroadcaster struct {
 
 // PublishEvent method is the only way to publish audit event
 func PublishEvent(e AuditEvent) {
-	auditCh <- e
+	_auditCh <- e
 }
 
 func (b *AuditBroadcaster) Start() {
@@ -49,6 +48,7 @@ func (b *AuditBroadcaster) Start() {
 	// b.testInit()
 
 	b.initializeTeeChannel(auditCh)
+	b.initializeTeeChannel(_auditCh)
 
 }
 
