@@ -12,10 +12,10 @@ import (
 // あんまいい実装とは言えないけど今の所永続化したり、Datastore, Repository用意したりするまでもない
 
 // ClaimManager唯一のインスタンス
-var cmInstance *ClaimManager
+var _cmInstance *ClaimManager
 
 func init() {
-	cmInstance = &ClaimManager{}
+	_cmInstance = &ClaimManager{}
 }
 
 type ClaimManager struct {
@@ -42,13 +42,13 @@ func (m *ClaimManager) findClaim(userId string) Claim {
 }
 
 func AddClaim(c Claim) {
-	cmInstance.addClaim(c)
+	_cmInstance.addClaim(c)
 }
 
 func FindClaim(userId string) Claim {
-	return cmInstance.findClaim(userId)
+	return _cmInstance.findClaim(userId)
 }
 
 func ListClaims() []Claim {
-	return cmInstance.claims
+	return _cmInstance.claims
 }
