@@ -43,7 +43,7 @@ var (
 
 //TODO: implement period(制限時間)
 type Claim interface {
-	GetClaimDate() time.Time
+	GetClaimAt() time.Time
 	GetDescription() string
 	GetEmail() string
 	GetEncryptType() encrypt.EncryptType
@@ -61,7 +61,7 @@ type Claim interface {
 }
 
 type ClaimBase struct {
-	ClaimDate        time.Time           `json:"claim_date"`
+	ClaimAt          time.Time           `json:"claim_date"`
 	Description      string              `json:"description"`
 	Email            string              `json:"email,omitempty"`
 	EncryptType      encrypt.EncryptType `json:"encrypt_type,omitempty"`
@@ -81,8 +81,8 @@ type GPGEncryptOption struct {
 	PublicKey string `json:"-"`
 }
 
-func (c *ClaimBase) GetClaimDate() time.Time {
-	return c.ClaimDate
+func (c *ClaimBase) GetClaimAt() time.Time {
+	return c.ClaimAt
 }
 
 func (c *ClaimBase) GetDescription() string {

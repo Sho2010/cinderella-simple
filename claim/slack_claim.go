@@ -40,7 +40,7 @@ func (c *SlackClaim) ToBlock() (slack.Block, error) {
 	text := fmt.Sprintf("Claimer: *@%s*\nPeriod: *%s*\nClaim Date: *%s*\nNamespace: *%s*\nShort description: %s",
 		c.User.Name,
 		"30min", // TODO: implement me
-		c.GetClaimDate().Format("2006/01/02 15:04:05"),
+		c.GetClaimAt().Format("2006/01/02 15:04:05"),
 		fmt.Sprintf("%+q", c.GetNamespaces()),
 		c.GetDescription(),
 	)
