@@ -27,6 +27,13 @@ const (
 	ViewRejectCallbackID      = "cinderella_claim_reject"
 )
 
+const (
+	ActionDownloadKubeconfig = "download_kubeconfig"
+	ActionCreateClaim        = "create_claim"
+
+	BlockDownloadKubeconfig = "download_kubeconfig"
+)
+
 func NewSlackApp(administrators []string) *SlackApp {
 	api := slack.New(
 		os.Getenv("SLACK_BOT_TOKEN"),
@@ -148,7 +155,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 
 	for _, v := range callback.ActionCallback.BlockActions {
 		switch v.ActionID {
-		case "create_claim":
+		case ActionCreateClaim:
 			c := ClaimController{
 				Slack: s,
 			}
@@ -157,7 +164,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 				panic(err)
 			}
 
-		case "create_kubeconfig":
+		case ActionDownloadKubeconfig:
 			c := KubeconfigController{
 				slack: s.Api,
 			}
