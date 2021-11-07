@@ -38,9 +38,9 @@ type HomeController struct {
 
 func (c *HomeController) Show(userID string) error {
 
+	myClaim := claim.FindClaim(userID)
 
-	//TODO: 管理者固定になってる
-	blocks, err := c.buildHomeView(true)
+	blocks, err := c.buildHomeView(myClaim)
 	if err != nil {
 		return fmt.Errorf("HomeView build failed: %w", err)
 	}
@@ -64,12 +64,15 @@ func (c *HomeController) Update(userID string) error {
 	return c.Show(userID)
 }
 
-func (c *HomeController) buildHomeView(isAdmin bool) (*slack.Blocks, error) {
+func (c *HomeController) buildHomeView(claim claim.Claim) (*slack.Blocks, error) {
 	blocks := slack.Blocks{}
 
 	if err := blocks.UnmarshalJSON(homeViewJson); err != nil {
 		return nil, fmt.Errorf("Blocks marshal error %w", err)
 	}
+
+	//TODO: 管理者固定になってる
+	isAdmin := false
 
 	if isAdmin {
 		adminBlocks, err := c.buildAdminView()
@@ -78,13 +81,15 @@ func (c *HomeController) buildHomeView(isAdmin bool) (*slack.Blocks, error) {
 		}
 		blocks.BlockSet = append(blocks.BlockSet, adminBlocks...)
 	} else {
-		generalBlocks, err := c.buildGeneralView()
+		generalBlocks, err := c.buildGeneralView(claim)
 		if err != nil {
 			return nil, err
 		}
 		blocks.BlockSet = append(blocks.BlockSet, generalBlocks...)
+		fmt.Printf("%#v\n", blocks)
 	}
 
+	fmt.Println(len(blocks.BlockSet))
 	return &blocks, nil
 }
 
@@ -122,23 +127,46 @@ func (c *HomeController) buildAdminView() ([]slack.Block, error) {
 	return blocks, nil
 }
 
-func (c *HomeController) buildGeneralView() ([]slack.Block, error) {
-
-	myClaim := claim.FindClaim("id")
+func (c *HomeController) buildGeneralView(myClaim claim.Claim) ([]slack.Block, error) {
 	if myClaim == nil {
-		return []slack.Block{}, nil
+		return []slack.Block{slack.NewHeaderBlock(
+			slack.NewTextBlockObject(slack.PlainTextType, "現在申請中の権限請求は存在しません。", false, false),
+		)}, nil
 	}
 
-	blocks := slack.Blocks{}
-	if err := blocks.UnmarshalJSON(homeGeneralBlocksJson); err != nil {
-		return nil, fmt.Errorf("Home general blocks marshal error %w", err)
+	//DEBUG:
+	if mc, ok := myClaim.(*claim.SlackClaim); ok {
+		mc.State = claim.ClaimStatusAccepted
 	}
 
-	// if myClaim.GetState() == claim.ClaimStatusPending {
-	// 	fmt.Println("debug")
-	// }
+	var headerText string
+	var downloadBlock slack.Block
+	switch myClaim.GetState() {
+	case claim.ClaimStatusAccepted:
+		headerText = ":memo: 承認済みの申請が存在します。\nKUBECONFIGをダウンロードし、作業を行ってください。"
 
-	return []slack.Block{}, nil
+		buttonText := slack.NewTextBlockObject("plain_text", "Download KUBECONFIG :arrow_down:", false, false)
+		dlButton := slack.NewButtonBlockElement(ActionDownloadKubeconfig, "download-kubeconfig-value", buttonText)
+		downloadBlock = slack.NewActionBlock(BlockDownloadKubeconfig, dlButton)
+
+	case claim.ClaimStatusPending:
+		headerText = "保留中の申請が存在します。"
+	case claim.ClaimStatusExpired:
+		headerText = "期限切れの申請が存在します。"
+	case claim.ClaimStatusRejected:
+		headerText = "申請が拒否されました。"
+	}
+
+	header := slack.NewHeaderBlock(
+		slack.NewTextBlockObject(slack.PlainTextType, headerText, false, false),
+	)
+
+	blocks := append([]slack.Block{}, header, ClaimToBlock(myClaim))
+	if downloadBlock != nil {
+		blocks = append(blocks, downloadBlock)
+	}
+
+	return blocks, nil
 }
 
 func (c *HomeController) generateExternalID() string {

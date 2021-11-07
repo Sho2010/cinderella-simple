@@ -7,8 +7,8 @@ import (
 )
 
 type SlackClaim struct {
-	Claim `json:"claim"`
-	User  slack.User `json:"slack_user"`
+	*ClaimBase `json:"claim"`
+	User       slack.User `json:"slack_user"`
 }
 
 func (c *SlackClaim) GetLabels() map[string]string {

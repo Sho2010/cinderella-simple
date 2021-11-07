@@ -34,7 +34,7 @@ func (c *KubeconfigController) SendSlackDM(claim claim.Claim) error {
 		}
 		fmt.Println(passwd)
 		//FIXME
-		// claim.ZipPassword = passwd
+		// claim.SetZipPassword(passwd)
 	}
 
 	filePath, err := k8s.CreateEncryptedFile(claim)
@@ -52,7 +52,7 @@ func (c *KubeconfigController) SendSlackDM(claim claim.Claim) error {
 			Channels:       []string{claim.GetSubject()},
 			Filetype:       string(claim.GetEncryptType()),
 			Title:          "kubeconfig",
-			InitialComment: fmt.Sprintf("password: `%s`", "実装中"), //FIXME: Zip password 前提のメッセージを返してしまっている
+			InitialComment: fmt.Sprintf("password: `%s`", claim.GetZipPassword()), //FIXME: Zip password 前提のメッセージを返してしまっている
 		})
 
 	if err != nil {

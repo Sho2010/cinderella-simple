@@ -3,7 +3,7 @@
 			"type": "section",
 			"text": {
 				"type": "mrkdwn",
-				"text": "*Pending Claims*"
+				"text": "*現在あなたは管理者です。申請中の権限請求に対してアクションを行ってください*\n *Pending Claims*"
 			}
 		},
 		{

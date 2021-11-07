@@ -51,3 +51,14 @@ func TestNormalizeDNS1123(t *testing.T) {
 		})
 	}
 }
+
+func TestWithOption(t *testing.T) {
+	input := "password"
+	zipOpt := ZipEncryptOption{
+		ZipPassword: input,
+	}
+
+	result := NewClaimBase(WithZipEncryptOption(zipOpt))
+	assert.Equal(t, result.ZipEncryptOption.ZipPassword, result.GetZipPassword())
+}
+

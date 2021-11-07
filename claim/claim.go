@@ -10,6 +10,11 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
+var (
+	ErrorRequireNamespace = &ClaimValidationError{mes: "Require Namespace field", field: "Namespaces", errorType: "empty value"}
+	ErrorRequireSubject   = &ClaimValidationError{mes: "Require Subject field", field: "Subject", errorType: "empty value"}
+)
+
 type ClaimStatus string
 
 const (
@@ -18,6 +23,8 @@ const (
 	ClaimStatusPending  ClaimStatus = "pending"
 	ClaimStatusExpired  ClaimStatus = "expired"
 )
+
+// const SERVICE_ACCOUNT_PREFIX = "glass-shoes-"
 
 type ClaimValidationError struct {
 	mes       string
@@ -35,11 +42,6 @@ func (err *ClaimValidationError) Is(e error) bool {
 	}
 	return false
 }
-
-var (
-	ErrorRequireNamespace = &ClaimValidationError{mes: "Require Namespace field", field: "Namespaces", errorType: "empty value"}
-	ErrorRequireSubject   = &ClaimValidationError{mes: "Require Subject field", field: "Subject", errorType: "empty value"}
-)
 
 //TODO: implement period(制限時間)
 type Claim interface {
@@ -71,10 +73,34 @@ type ClaimBase struct {
 	Subject          string              `json:"subject,omitempty"`
 	ZipEncryptOption `json:"zip_option,omitempty"`
 	GPGEncryptOption `json:"gpg_option,omitempty"`
+
+	AcceptedAt time.Time `json:"accepted_at,omitempty"`
+	RejectedAt time.Time `json:"rejected_at,omitempty"`
+	ExpredAt   time.Time `json:"expred_at,omitempty"`
+}
+
+type ClaimOption interface {
+	Apply(*ClaimBase)
 }
 
 type ZipEncryptOption struct {
 	ZipPassword string `json:"-"`
+}
+
+func (opt ZipEncryptOption) Apply(c *ClaimBase) {
+	c.ZipEncryptOption = opt
+}
+
+func WithZipEncryptOption(opt ZipEncryptOption) ZipEncryptOption {
+	return ZipEncryptOption(opt)
+}
+
+func NewClaimBase(opts ...ClaimOption) *ClaimBase {
+	cb := &ClaimBase{}
+	for _, o := range opts {
+		o.Apply(cb)
+	}
+	return cb
 }
 
 type GPGEncryptOption struct {
@@ -127,16 +153,23 @@ func (c *ClaimBase) GetEmail() string {
 	return c.Email
 }
 
+//TODO: 暫定
 func (c *ClaimBase) GetZipPassword() string {
 	return c.ZipPassword
+}
+
+//TODO: 暫定
+func (c *ClaimBase) SetZipPassword(password string) {
+	c.ZipEncryptOption.ZipPassword = password
 }
 
 func (c *ClaimBase) GetServiceAccountName() (string, error) {
 	s, err := NormalizeDNS1123(c.Subject)
 	if err != nil {
-		return "", fmt.Errorf("Name is not DNS1123: %w", err)
+		return "", fmt.Errorf("Subject is not DNS1123: %w", err)
 	}
 
+	//TODO: サービスアカウント名の決定
 	s = fmt.Sprintf("glass-shoes-%s", s)
 
 	return s, nil

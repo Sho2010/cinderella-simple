@@ -23,10 +23,13 @@
 					"type": "button",
 					"text": {
 						"type": "plain_text",
-						"text": "Create KUBECONFIG :arrow_upper_right:"
+						"text": "Create KUBECONFIG :arrow_down:"
 					},
-					"action_id": "create_kubeconfig"
+					"action_id": "download_kubeconfig"
 				}
 			]
+		},
+		{
+			"type": "divider"
 		}
 	]

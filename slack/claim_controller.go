@@ -51,7 +51,7 @@ func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Clai
 	encryptType := encrypt.EncryptType(vlaues["radio-encrypt-type"]["encrypt-type"].SelectedOption.Value)
 
 	claim := claim.SlackClaim{
-		Claim: &claim.ClaimBase{
+		ClaimBase: &claim.ClaimBase{
 			//FIXME: GetSubject()はslack.User から返すのにClaimBase.Validation()がSubjectを参照するせいでエラーになる
 			Subject:          callback.User.ID,
 			Description:      vlaues["input-description"]["description"].Value,
