@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/slack-go/slack"
 )
 
@@ -82,3 +83,31 @@ func debugUpdateViewSubmissionResponse() *slack.ViewSubmissionResponse {
 // 			// slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false),
 // 			slack.NewSectionBlock(slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false), nil, nil),
 // 		}}}, "dkajfjdajfda", "130321089730192739172392", callback.Container.ViewID)
+
+func ClaimToBlock(c claim.Claim) slack.Block {
+	// Block example
+	// "text": "Claimer: *<@U04L97CP5>*\nPeriod: *30min*\nClaim Date: *2021/10/26 12:00:00*\nNamespace: *awesome*\nShort description: デバッグしたい"
+	text := fmt.Sprintf("Claimer: *@%s*\nPeriod: *%s*\nClaim Date: *%s*\nNamespace: *%s*\nShort description: %s",
+		c.GetName(),
+		"30min", // TODO: implement me
+		c.GetClaimAt().Format("2006/01/02 15:04:05"),
+		fmt.Sprintf("%+q", c.GetNamespaces()),
+		c.GetDescription(),
+	)
+
+	block := slack.NewSectionBlock(
+		&slack.TextBlockObject{
+			Type: slack.MarkdownType,
+			Text: text,
+		},
+		nil,
+		slack.NewAccessory(
+			slack.NewImageBlockElement(
+				"https://api.slack.com/img/blocks/bkb_template_images/creditcard.png", //TODO: いい感じのアイコン
+				"claim_image",
+			),
+		),
+	)
+
+	return block
+}
