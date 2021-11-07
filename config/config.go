@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -9,9 +12,11 @@ import (
 
 var _instance *Config
 
+const TemplateExtension = ".yaml.tmpl"
+
 func init() {
 	// //TODO: 環境変数による上書き処理
-	_instance = LoadConfig()
+	_instance = &Config{}
 }
 
 type Config struct {
@@ -46,18 +51,49 @@ func LoadConfig() *Config {
 		panic(fmt.Errorf("Fatal error config file: %w \n", err))
 	}
 
-	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
-		panic(fmt.Errorf("unable to decode into struct, %v , %w", config, err))
+	if err := viper.Unmarshal(_instance); err != nil {
+		panic(fmt.Errorf("unable to decode into struct, %v , %w", _instance, err))
 	}
 
-	return &config
+	for i, dir := range _instance.ManifestDirs {
+		if strings.HasPrefix(dir, "~/") {
+			homedir, _ := os.UserHomeDir()
+			dir = homedir + dir[1:]
+			_instance.ManifestDirs[i] = dir
+		}
+	}
+
+	return _instance
 }
 
-func (c *Config) WriteConfig() {
-	// viper.SetConfigName("cinderella") // name of config file (without extension)
-	// viper.SetConfigType("yaml")       // REQUIRED if the config file does not have the extension in the name
+// SearchManifest is search manifest template from manifest directorys
+// name argument is file name without extension
+func SearchManifest(name string) string {
+	return searchManifest(name, GetConfig().ManifestDirs)
+}
 
-	// viper.SafeWriteConfig()
-	// viper.WriteConfigAs("~/cinderella.config")
+// SearchManifest is search manifest template from manifest directorys
+// name argument is file name without extension
+func searchManifest(name string, manifestDirs []string) string {
+	for _, dir := range manifestDirs {
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			fmt.Printf("%s is not existing\n", dir)
+			continue
+		}
+
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			log.Fatalf("Failed to read dir %s", dir)
+		}
+
+		for _, file := range files {
+			tmpl := name + TemplateExtension
+			if file.Name() == tmpl {
+				return fmt.Sprintf("%s/%s", dir, file.Name())
+			}
+		}
+	}
+
+	fmt.Printf("%s not found\n", name)
+	return ""
 }

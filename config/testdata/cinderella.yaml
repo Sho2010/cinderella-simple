@@ -1,0 +1,16 @@
+cleanupTickEvery: 10s
+
+manifestDirs:
+- ~/_example_example_manifest_dir
+- testdata/manifest01
+- testdata/manifest02
+
+namespace: default
+overwriteRole: false
+overWriteRoleBinding: false
+
+slack:
+  auditChannel: '#cinderella'
+  notifyChannel: '#cinderella'
+  administrators:
+    - "U04L97CP5"
