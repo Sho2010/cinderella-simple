@@ -180,7 +180,6 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 				panic(err)
 			}
 
-		// case "open_settings":
 		// case "claim_details":
 		// case "claim_reject":
 		default:
