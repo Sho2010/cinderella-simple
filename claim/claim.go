@@ -174,9 +174,7 @@ func (c *ClaimBase) GetServiceAccountName() (string, error) {
 	}
 
 	//TODO: サービスアカウント名の決定
-	s = fmt.Sprintf("glass-shoes-%s", s)
-
-	return s, nil
+	return fmt.Sprintf("glass-shoes-%s", s), nil
 }
 
 func (c *ClaimBase) Validate() error {
