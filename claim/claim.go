@@ -24,6 +24,10 @@ const (
 	ClaimStatusExpired  ClaimStatus = "expired"
 )
 
+const (
+	ClaimAnnotationPrefix = "cinderella/claim."
+)
+
 // const SERVICE_ACCOUNT_PREFIX = "glass-shoes-"
 
 type ClaimValidationError struct {
@@ -129,15 +133,15 @@ func (c *ClaimBase) GetState() ClaimStatus {
 
 func (c *ClaimBase) GetLabels() map[string]string {
 	return map[string]string{
-		"": "",
+		"cinderella/claimed-by": c.GetSubject(),
 	}
-
-	// return make(map[string]string)
 }
 
 func (c *ClaimBase) GetAnnotations() map[string]string {
 	return map[string]string{
-		"": "",
+		ClaimAnnotationPrefix + "subject":  c.GetSubject(),
+		ClaimAnnotationPrefix + "name":     c.GetName(),
+		ClaimAnnotationPrefix + "claim-at": c.GetClaimAt().Format(time.RFC3339),
 	}
 }
 
