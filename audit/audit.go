@@ -38,7 +38,9 @@ type AuditBroadcaster struct {
 
 // PublishEvent method is the only way to publish audit event
 func PublishEvent(e AuditEvent) {
-	_auditCh <- e
+	go func() {
+		_auditCh <- e
+	}()
 }
 
 func (b *AuditBroadcaster) Start() {
