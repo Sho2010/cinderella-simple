@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Sho2010/cinderella-simple/config"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -17,7 +16,8 @@ var ManagedLabelMap = map[string]string{
 }
 
 type Cleaner struct {
-	client kubernetes.Interface
+	client    kubernetes.Interface
+	tickEvery time.Duration
 }
 
 func NewCleaner(client kubernetes.Interface) (Cleaner, error) {
@@ -26,18 +26,19 @@ func NewCleaner(client kubernetes.Interface) (Cleaner, error) {
 	}, nil
 }
 
-func (cleaner *Cleaner) Start(ctx context.Context) error {
+func (c *Cleaner) Start(ctx context.Context) error {
 
-	// TODO: configに直接の依存関係を持たない
-	// TODO: gen child context
-	config := config.GetConfig()
-	t := time.NewTicker(config.CleanupTickEvery)
+	if c.tickEvery < time.Second*10 {
+		c.tickEvery = time.Second * 10
+	}
+
+	t := time.NewTicker(c.tickEvery)
 	defer t.Stop()
 
 	for {
 		select {
 		case now := <-t.C:
-			cleaner.cleanupResources(ctx, now)
+			c.cleanupResources(ctx, now)
 		case <-ctx.Done():
 			fmt.Println("Stop cleaner")
 			return ctx.Err()
