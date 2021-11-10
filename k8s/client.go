@@ -52,7 +52,6 @@ func buildOutOfClusterConfig() (*rest.Config, error) {
 	kubeconfigPath := os.Getenv("KUBECONFIG")
 	if kubeconfigPath == "" {
 		home, _ := os.UserHomeDir()
-		fmt.Printf("home: %s", home)
 		kubeconfigPath = home + "/.kube/config"
 	}
 	return clientcmd.BuildConfigFromFlags("", kubeconfigPath)
