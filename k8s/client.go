@@ -1,7 +1,6 @@
 package k8s
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -11,13 +10,19 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-//TODO: どうしようかな
-var (
-	ServiceAccountNamespace = "default"
+const (
+	ManagedLabel      = "app.kubernetes.io/managed-by"
+	ManagedLabelValue = "cinderella"
 )
 
-//TODO: client取得するときにHost一緒に返すのあまりにも使いづらいのでなんとかする
+// TODO: configから取得する
+var _serviceAccountNamespace = "default"
 
+var _managedResourceLabels = map[string]string{
+	ManagedLabel: ManagedLabelValue,
+}
+
+//TODO: client取得するときにHost一緒に返すのあまりにも使いづらいのでなんとかする
 func GetDefaultClient() (kubernetes.Interface, string) {
 	var kubeClient kubernetes.Interface
 	var server string

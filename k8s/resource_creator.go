@@ -28,7 +28,7 @@ type ResourceCreater struct {
 }
 
 var _requireLabels = map[string]string{
-	"app.kubernetes.io/managed-by": "cinderella",
+	ManagedLabel: ManagedLabelValue,
 }
 
 var (

@@ -16,11 +16,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// const (
-// // labels:
-// //   app.kubernetes.io/managed-by: cinderella
-// )
-
 type KubeconfigGenerator struct {
 	Client kubernetes.Interface
 }
@@ -174,7 +169,7 @@ func WriteEncryptedFile(writer io.Writer, claim claim.Claim) error {
 		if err != nil {
 			return
 		}
-		gen.Generate(w, sa, ServiceAccountNamespace)
+		gen.Generate(w, sa, _serviceAccountNamespace)
 	}()
 
 	var enc encrypt.FileEncrypter
