@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -15,20 +16,43 @@ var ManagedLabelMap = map[string]string{
 	"app.kubernetes.io/managed-by": "cinderella",
 }
 
-type Cleaner struct {
-	client    kubernetes.Interface
-	tickEvery time.Duration
+type CleanupError struct {
+	msg string
+	err error
 }
 
-func NewCleaner(client kubernetes.Interface) (Cleaner, error) {
+const (
+	minTickEvery   = time.Second * 10
+	maxValidPeriod = time.Hour
+)
+
+var _ error = &CleanupError{}
+
+func (m CleanupError) Error() string {
+	return fmt.Sprintf("%s: %s", m.msg, m.err)
+}
+
+func (m CleanupError) Unwrap() error {
+	return m.err
+}
+
+type Cleaner struct {
+	client         kubernetes.Interface
+	tickEvery      time.Duration
+	maxValidPeriod time.Duration
+}
+
+func NewCleaner(client kubernetes.Interface, tickEvery time.Duration) (Cleaner, error) {
 	return Cleaner{
-		client: client,
+		client:         client,
+		tickEvery:      tickEvery,
+		maxValidPeriod: maxValidPeriod,
 	}, nil
 }
 
 func (c *Cleaner) Start(ctx context.Context) error {
 
-	if c.tickEvery < time.Second*10 {
+	if c.tickEvery < (time.Second * 10) {
 		c.tickEvery = time.Second * 10
 	}
 
@@ -38,7 +62,7 @@ func (c *Cleaner) Start(ctx context.Context) error {
 	for {
 		select {
 		case now := <-t.C:
-			c.cleanupResources(ctx, now)
+			c.CleanupResources(ctx, now)
 		case <-ctx.Done():
 			fmt.Println("Stop cleaner")
 			return ctx.Err()
@@ -46,33 +70,116 @@ func (c *Cleaner) Start(ctx context.Context) error {
 	}
 }
 
+// 一応外部から手動で呼び出せるようにしておく
+func (c *Cleaner) CleanupResources(ctx context.Context, now time.Time) {
+	roleList, err := c.listRoles(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, v := range roleList.Items {
+		fmt.Printf("Name: %s\n", v.Name)
+		fmt.Printf("Namespace: %s\n", v.Namespace)
+		fmt.Printf("CreatedAt: %s\n", v.CreationTimestamp.Format(time.RFC3339))
+		fmt.Printf("Expired: %t\n", c.isExpired(v.CreationTimestamp.Time))
+
+		c.deleteResource(ctx, &v)
+
+	}
+
+	rbList, err := c.listRoleBindings(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, v := range rbList.Items {
+		fmt.Printf("Name: %s\n", v.Name)
+		fmt.Printf("Namespace: %s\n", v.Namespace)
+		fmt.Printf("CreatedAt: %s\n", v.CreationTimestamp.Format(time.RFC3339))
+		fmt.Printf("Expired: %t\n", c.isExpired(v.CreationTimestamp.Time))
+	}
+
+	saList, err := c.listServiceAccounts(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, v := range saList.Items {
+		fmt.Printf("Name: %s\n", v.Name)
+		fmt.Printf("Namespace: %s\n", v.Namespace)
+		fmt.Printf("CreatedAt: %s\n", v.CreationTimestamp.Format(time.RFC3339))
+		fmt.Printf("Expired: %t\n", c.isExpired(v.CreationTimestamp.Time))
+	}
+}
+
+func (c *Cleaner) listRoles(ctx context.Context) (*rbacv1.RoleList, error) {
+	list, err := c.client.RbacV1().Roles(metav1.NamespaceAll).List(ctx, c.getListOptions())
+	if err != nil {
+		return nil, &CleanupError{
+			msg: "Failed to list managed role resources",
+			err: err,
+		}
+	}
+	return list, nil
+}
+
+func (c *Cleaner) listRoleBindings(ctx context.Context) (*rbacv1.RoleBindingList, error) {
+	list, err := c.client.RbacV1().RoleBindings(metav1.NamespaceAll).List(ctx, c.getListOptions())
+	if err != nil {
+		return nil, &CleanupError{
+			msg: "Failed to list managed roleBindings resources",
+			err: err,
+		}
+	}
+	return list, nil
+}
+
+func (c *Cleaner) listServiceAccounts(ctx context.Context) (*corev1.ServiceAccountList, error) {
+
+	list, err := c.client.CoreV1().ServiceAccounts(_serviceAccountNamespace).List(ctx, c.getListOptions())
+	if err != nil {
+		return nil, &CleanupError{
+			msg: "Failed to list managed roleBindings resources",
+			err: err,
+		}
+	}
+	return list, nil
+}
+
+func (c *Cleaner) isExpired(createdAt time.Time) bool {
+	//TODO: annotationに個別のExpireを記述してそれを参照するようにする
+	// expire := getByAnnotation()
+	// return expire.Before(time.Now()) || createdAt.Add(c.maxValidPeriod).Before(time.Now())
+
+	return createdAt.Add(c.maxValidPeriod).Before(time.Now())
+}
+
+func (c *Cleaner) deleteResource(ctx context.Context, obj metav1.Object) error {
+	switch obj.(type) {
+	case *rbacv1.Role:
+		role := obj.(*rbacv1.Role)
+		client := c.client.RbacV1().Roles(role.Namespace)
+		client.Delete(ctx, role.Name, metav1.DeleteOptions{})
+	case *rbacv1.RoleBinding:
+		rb := obj.(*rbacv1.RoleBinding)
+		client := c.client.RbacV1().RoleBindings(rb.Namespace)
+		client.Delete(ctx, rb.Name, metav1.DeleteOptions{})
+	case *corev1.ServiceAccount:
+		sa := obj.(*corev1.ServiceAccount)
+		client := c.client.CoreV1().ServiceAccounts(sa.Namespace)
+		client.Delete(ctx, sa.Name, metav1.DeleteOptions{})
+	default:
+		panic("unknown resource type")
+	}
+	return nil
+}
+
 func (c *Cleaner) getListOptions() metav1.ListOptions {
 	labelSelector := &metav1.LabelSelector{
-		MatchLabels: map[string]string{"app.kubernetes.io/managed-by": "cinderella"},
+		MatchLabels: _managedResourceLabels,
 	}
 
 	return metav1.ListOptions{
 		LabelSelector: metav1.FormatLabelSelector(labelSelector),
 	}
-}
-
-func (c *Cleaner) cleanupResources(ctx context.Context, now time.Time) {
-	//TODO: Implement me
-	fmt.Println(now.Format(time.RFC3339))
-	c.listManagedResources(ctx)
-}
-
-func (c *Cleaner) listManagedResources(ctx context.Context) (*rbacv1.RoleList, error) {
-	list, err := c.client.RbacV1().Roles(metav1.NamespaceAll).List(ctx, c.getListOptions())
-	if err != nil {
-		panic(err)
-	}
-
-	//debug code: audit eventをFireさせる
-	RaiseCleanupEvent("Raise audit event test")
-	for _, v := range list.Items {
-		fmt.Printf("Name: %s\n", v.Name)
-	}
-
-	return list, nil
 }
