@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -20,13 +19,13 @@ func init() {
 }
 
 type Config struct {
-	CleanupTickEvery     time.Duration //TODO: Durationを直接持たないで secoundをもつ
-	Namespace            string
-	ManifestDirs         []string
-	KubeServer           string
-	Slack                SlackConfig
-	OverwriteRole        bool
-	OverwriteRoleBinding bool
+	CleanupTickEverySeconds int
+	Namespace               string
+	ManifestDirs            []string
+	KubeServer              string
+	Slack                   SlackConfig
+	OverwriteRole           bool
+	OverwriteRoleBinding    bool
 }
 
 func GetConfig() *Config {
@@ -38,7 +37,7 @@ func LoadConfig() *Config {
 	viper.SetConfigType("yaml")       // REQUIRED if the config file does not have the extension in the name
 
 	viper.SetDefault("Namespace", "default")
-	viper.SetDefault("CleanupTickEvery", 10*time.Second)
+	viper.SetDefault("CleanupTickEverySeconds", 10)
 	viper.SetDefault("ManifestDirs", []string{"/etc/cinderella"})
 	viper.SetDefault("OverwriteRole", false)
 	viper.SetDefault("OverwriteRoleBinding", false)
