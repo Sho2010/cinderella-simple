@@ -96,12 +96,14 @@ func (c *Cleaner) CleanupResources(ctx context.Context, now time.Time) {
 		panic(err)
 	}
 
-	for i, v := range roleList.Items {
-		del, err := c.deleteResource(ctx, &v)
+	for i := range roleList.Items {
+		p := &roleList.Items[i]
+
+		del, err := c.deleteResource(ctx, p)
 		if err != nil {
-			errs.Add(err, &roleList.Items[i])
+			errs.Add(err, p)
 		} else if del {
-			deletedObjects = append(deletedObjects, &roleList.Items[i])
+			deletedObjects = append(deletedObjects, p)
 		}
 	}
 
@@ -110,12 +112,14 @@ func (c *Cleaner) CleanupResources(ctx context.Context, now time.Time) {
 		panic(err)
 	}
 
-	for i, v := range rbList.Items {
-		del, err := c.deleteResource(ctx, &v)
+	for i := range rbList.Items {
+		p := &rbList.Items[i]
+
+		del, err := c.deleteResource(ctx, p)
 		if err != nil {
-			errs.Add(err, &rbList.Items[i])
+			errs.Add(err, p)
 		} else if del {
-			deletedObjects = append(deletedObjects, &rbList.Items[i])
+			deletedObjects = append(deletedObjects, p)
 		}
 	}
 
@@ -124,12 +128,14 @@ func (c *Cleaner) CleanupResources(ctx context.Context, now time.Time) {
 		panic(err)
 	}
 
-	for i, v := range saList.Items {
-		del, err := c.deleteResource(ctx, &v)
+	for i := range saList.Items {
+		p := &saList.Items[i]
+
+		del, err := c.deleteResource(ctx, p)
 		if err != nil {
-			errs.Add(err, &saList.Items[i])
+			errs.Add(err, p)
 		} else if del {
-			deletedObjects = append(deletedObjects, &saList.Items[i])
+			deletedObjects = append(deletedObjects, p)
 		}
 	}
 
@@ -174,19 +180,11 @@ func (c *Cleaner) isExpired(createdAt time.Time) bool {
 	//TODO: annotationに個別のExpireを記述してそれを参照するようにする
 	// expire := getByAnnotation()
 	// return expire.Before(time.Now()) || createdAt.Add(c.maxValidPeriod).Before(time.Now())
-
-	// fmt.Println("---")
-	// fmt.Printf("createdAt: %s\n", createdAt)
-	// fmt.Printf("expiredAt: %s\n", createdAt.Add(c.maxValidPeriod))
-	// fmt.Printf("now: %s\n", time.Now())
-	// fmt.Println("---")
-
 	return createdAt.Add(c.maxValidPeriod).Before(time.Now())
 }
 
 func (c *Cleaner) deleteResource(ctx context.Context, obj metav1.Object) (bool, error) {
 	if !c.isExpired(obj.GetCreationTimestamp().Time) {
-		fmt.Printf("%s/%s is valid\n", obj.GetNamespace(), obj.GetName())
 		return false, nil
 	}
 
