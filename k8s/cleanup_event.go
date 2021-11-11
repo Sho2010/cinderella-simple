@@ -24,7 +24,7 @@ func (e *CleanupEvent) GetMessage() string {
 	if len(e.deletedObjects) > 0 {
 		fmt.Fprintf(&sb, "[%s] Deleted expired %d objects:", e.GetType(), len(e.deletedObjects))
 		for _, obj := range e.deletedObjects {
-			fmt.Fprintf(&sb, " %s/%s", obj.GetNamespace(), obj.GetName())
+			fmt.Fprintf(&sb, " (%T)%s/%s,", obj, obj.GetNamespace(), obj.GetName())
 		}
 		fmt.Fprint(&sb, "\n")
 	}
@@ -53,8 +53,6 @@ func (e *CleanupEvent) String() string {
 }
 
 func newCleanupEvent(deletedObjects []metav1.Object, errs deleteErrors) *CleanupEvent {
-	fmt.Printf("%#v", deletedObjects)
-
 	return &CleanupEvent{
 		cleanupAt:      time.Now(),
 		deletedObjects: deletedObjects,
