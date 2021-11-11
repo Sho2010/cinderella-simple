@@ -16,6 +16,7 @@ const (
 	AuditTypeAcceptClaim AuditType = "accept_claim"
 	AuditTypeRejectClaim AuditType = "reject_claim"
 	AuditTypeExpireClaim AuditType = "expire_claim"
+	AuditTypeCleanup     AuditType = "cleanup"
 )
 
 type AuditEvent interface {
@@ -47,11 +48,9 @@ func (b *AuditBroadcaster) Start() {
 	fmt.Println("Start audit event broadcasting")
 
 	//debug
-	// b.testInit()
+	b.testInit()
 
-	b.initializeTeeChannel(auditCh)
 	b.initializeTeeChannel(_auditCh)
-
 }
 
 func (b *AuditBroadcaster) testInit() {

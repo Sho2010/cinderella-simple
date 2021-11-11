@@ -22,8 +22,9 @@ type CleanupError struct {
 }
 
 const (
-	minTickEvery   = time.Second * 10
-	maxValidPeriod = time.Hour
+	minTickEvery = time.Second * 10
+	// maxValidPeriod = time.Hour
+	maxValidPeriod = time.Second * 20
 )
 
 var _ error = &CleanupError{}
@@ -70,21 +71,38 @@ func (c *Cleaner) Start(ctx context.Context) error {
 	}
 }
 
+type deleteError struct {
+	err    error
+	target metav1.Object
+}
+
+type deleteErrors []deleteError
+
+func (d deleteErrors) Add(err error, target metav1.Object) deleteErrors {
+	return append(d, deleteError{
+		err:    err,
+		target: target,
+	})
+}
+
 // 一応外部から手動で呼び出せるようにしておく
 func (c *Cleaner) CleanupResources(ctx context.Context, now time.Time) {
+
+	deletedObjects := []metav1.Object{}
+	errs := deleteErrors{}
+
 	roleList, err := c.listRoles(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, v := range roleList.Items {
-		fmt.Printf("Name: %s\n", v.Name)
-		fmt.Printf("Namespace: %s\n", v.Namespace)
-		fmt.Printf("CreatedAt: %s\n", v.CreationTimestamp.Format(time.RFC3339))
-		fmt.Printf("Expired: %t\n", c.isExpired(v.CreationTimestamp.Time))
-
-		c.deleteResource(ctx, &v)
-
+	for i, v := range roleList.Items {
+		del, err := c.deleteResource(ctx, &v)
+		if err != nil {
+			errs.Add(err, &roleList.Items[i])
+		} else if del {
+			deletedObjects = append(deletedObjects, &roleList.Items[i])
+		}
 	}
 
 	rbList, err := c.listRoleBindings(ctx)
@@ -92,11 +110,13 @@ func (c *Cleaner) CleanupResources(ctx context.Context, now time.Time) {
 		panic(err)
 	}
 
-	for _, v := range rbList.Items {
-		fmt.Printf("Name: %s\n", v.Name)
-		fmt.Printf("Namespace: %s\n", v.Namespace)
-		fmt.Printf("CreatedAt: %s\n", v.CreationTimestamp.Format(time.RFC3339))
-		fmt.Printf("Expired: %t\n", c.isExpired(v.CreationTimestamp.Time))
+	for i, v := range rbList.Items {
+		del, err := c.deleteResource(ctx, &v)
+		if err != nil {
+			errs.Add(err, &rbList.Items[i])
+		} else if del {
+			deletedObjects = append(deletedObjects, &rbList.Items[i])
+		}
 	}
 
 	saList, err := c.listServiceAccounts(ctx)
@@ -104,12 +124,16 @@ func (c *Cleaner) CleanupResources(ctx context.Context, now time.Time) {
 		panic(err)
 	}
 
-	for _, v := range saList.Items {
-		fmt.Printf("Name: %s\n", v.Name)
-		fmt.Printf("Namespace: %s\n", v.Namespace)
-		fmt.Printf("CreatedAt: %s\n", v.CreationTimestamp.Format(time.RFC3339))
-		fmt.Printf("Expired: %t\n", c.isExpired(v.CreationTimestamp.Time))
+	for i, v := range saList.Items {
+		del, err := c.deleteResource(ctx, &v)
+		if err != nil {
+			errs.Add(err, &saList.Items[i])
+		} else if del {
+			deletedObjects = append(deletedObjects, &saList.Items[i])
+		}
 	}
+
+	publishCleanupEvent(deletedObjects, errs)
 }
 
 func (c *Cleaner) listRoles(ctx context.Context) (*rbacv1.RoleList, error) {
@@ -151,27 +175,44 @@ func (c *Cleaner) isExpired(createdAt time.Time) bool {
 	// expire := getByAnnotation()
 	// return expire.Before(time.Now()) || createdAt.Add(c.maxValidPeriod).Before(time.Now())
 
+	// fmt.Println("---")
+	// fmt.Printf("createdAt: %s\n", createdAt)
+	// fmt.Printf("expiredAt: %s\n", createdAt.Add(c.maxValidPeriod))
+	// fmt.Printf("now: %s\n", time.Now())
+	// fmt.Println("---")
+
 	return createdAt.Add(c.maxValidPeriod).Before(time.Now())
 }
 
-func (c *Cleaner) deleteResource(ctx context.Context, obj metav1.Object) error {
+func (c *Cleaner) deleteResource(ctx context.Context, obj metav1.Object) (bool, error) {
+	if !c.isExpired(obj.GetCreationTimestamp().Time) {
+		fmt.Printf("%s/%s is valid\n", obj.GetNamespace(), obj.GetName())
+		return false, nil
+	}
+
+	var err error
 	switch obj.(type) {
 	case *rbacv1.Role:
 		role := obj.(*rbacv1.Role)
 		client := c.client.RbacV1().Roles(role.Namespace)
-		client.Delete(ctx, role.Name, metav1.DeleteOptions{})
+		err = client.Delete(ctx, role.Name, metav1.DeleteOptions{})
 	case *rbacv1.RoleBinding:
 		rb := obj.(*rbacv1.RoleBinding)
 		client := c.client.RbacV1().RoleBindings(rb.Namespace)
-		client.Delete(ctx, rb.Name, metav1.DeleteOptions{})
+		err = client.Delete(ctx, rb.Name, metav1.DeleteOptions{})
 	case *corev1.ServiceAccount:
 		sa := obj.(*corev1.ServiceAccount)
 		client := c.client.CoreV1().ServiceAccounts(sa.Namespace)
-		client.Delete(ctx, sa.Name, metav1.DeleteOptions{})
+		err = client.Delete(ctx, sa.Name, metav1.DeleteOptions{})
 	default:
-		panic("unknown resource type")
+		//誰かが手動でlabel書いたケースとかで一応ありえる
+		return false, fmt.Errorf("unknown resource type: %w", err)
 	}
-	return nil
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (c *Cleaner) getListOptions() metav1.ListOptions {
@@ -183,3 +224,10 @@ func (c *Cleaner) getListOptions() metav1.ListOptions {
 		LabelSelector: metav1.FormatLabelSelector(labelSelector),
 	}
 }
+
+// func logObjectInfo(){
+// 		fmt.Printf("Name: %s\n", v.Name)
+// 		fmt.Printf("Namespace: %s\n", v.Namespace)
+// 		fmt.Printf("CreatedAt: %s\n", v.CreationTimestamp.Format(time.RFC3339))
+// 		fmt.Printf("Expired: %t\n", c.isExpired(v.CreationTimestamp.Time))
+// }
