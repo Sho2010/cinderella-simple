@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"embed"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -14,6 +15,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+)
+
+//go:embed templates/*
+var _templates embed.FS
+
+const (
+	KubeconfigTemplate = "templates/kubeconfig.tmpl"
 )
 
 type KubeconfigGenerator struct {
@@ -41,9 +49,7 @@ func (gen *KubeconfigGenerator) Generate(writer io.Writer, name, namespace strin
 		return err
 	}
 
-	//TODO: 固定パス修正
-	tf := "./k8s/templates/kubeconfig.tmpl"
-	tmpl, err := template.ParseFiles(tf)
+	tmpl, err := template.ParseFS(_templates, KubeconfigTemplate)
 	if err != nil {
 		return err
 	}
@@ -54,7 +60,6 @@ func (gen *KubeconfigGenerator) Generate(writer io.Writer, name, namespace strin
 	}
 
 	return nil
-
 }
 
 func (gen *KubeconfigGenerator) buildFromSA(sa *v1.ServiceAccount) (KubeconfigValues, error) {
@@ -146,7 +151,6 @@ func CreateEncryptedFile(claim claim.Claim) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%w", err)
 	}
-
 	defer tmpFile.Close()
 
 	if err := WriteEncryptedFile(tmpFile, claim); err != nil {
@@ -159,6 +163,7 @@ func WriteEncryptedFile(writer io.Writer, claim claim.Claim) error {
 	r, w := io.Pipe()
 	defer r.Close()
 
+	//TODO: goroutineのエラーを補足する
 	go func() {
 		defer w.Close()
 		client, _ := GetDefaultClient()
@@ -167,7 +172,8 @@ func WriteEncryptedFile(writer io.Writer, claim claim.Claim) error {
 		}
 		sa, err := claim.GetServiceAccountName()
 		if err != nil {
-			return
+			//FIXME
+			panic(err)
 		}
 		gen.Generate(w, sa, _serviceAccountNamespace)
 	}()
