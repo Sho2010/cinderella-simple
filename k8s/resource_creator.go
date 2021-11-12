@@ -37,7 +37,6 @@ var (
 )
 
 func NewResourceCreater(client kubernetes.Interface, serviceAccountNamespace string, claim claim.Claim) (*ResourceCreater, error) {
-
 	if client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
@@ -138,11 +137,6 @@ func (rc *ResourceCreater) createRoleBinding(bindingName string, roleName string
 	if len(f) == 0 {
 		return nil, fmt.Errorf("v1/RoleBinding %s manifest file not found", bindingName)
 	}
-
-	// yaml, err := os.ReadFile(f)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("do %w", err)
-	// }
 
 	saName, _ := rc.claim.GetServiceAccountName()
 	roleName, err := claim.NormalizeDNS1123(roleName + "-" + rc.claim.GetSubject())
