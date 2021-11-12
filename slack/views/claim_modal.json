@@ -105,6 +105,13 @@
 			},
 			"accessory": {
 				"type": "radio_buttons",
+				"initial_option": {
+					"value": "zip",
+		 			"text": {
+						"type": "plain_text",
+						"text": "Zip password"
+					}
+				},
 				"options": [
 					{
 						"text": {
