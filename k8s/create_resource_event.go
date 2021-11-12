@@ -12,14 +12,10 @@ type ResourceCreateEvent struct {
 }
 
 // Verify interface compliance
-var _ audit.AuditEvent = (*ResourceCreateEvent)(nil)
+var _ audit.AuditEvent = &ResourceCreateEvent{}
 
 func (e *ResourceCreateEvent) GetMessage() string {
 	return e.message
-}
-
-func GetType() string {
-	return "ResourceCreate"
 }
 
 func (e *ResourceCreateEvent) EventAt() time.Time {
@@ -32,4 +28,8 @@ func RaiseResourceCreateEvent(message string) {
 		message:  message,
 	}
 	audit.PublishEvent(e)
+}
+
+func (e *ResourceCreateEvent) GetType() audit.AuditType {
+	return audit.AuditTypeCreateKubernetesResource
 }

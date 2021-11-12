@@ -13,16 +13,18 @@ type AuditType string
 
 // AuditType
 const (
-	AuditTypeAcceptClaim AuditType = "accept_claim"
-	AuditTypeRejectClaim AuditType = "reject_claim"
-	AuditTypeExpireClaim AuditType = "expire_claim"
-	AuditTypeCleanup     AuditType = "cleanup"
+	AuditTypeCreateKubernetesResource AuditType = "create_k8s_resource"
+	AuditTypeRegisterClaim            AuditType = "register_claim"
+	AuditTypeAcceptClaim              AuditType = "accept_claim"
+	AuditTypeRejectClaim              AuditType = "reject_claim"
+	AuditTypeExpireClaim              AuditType = "expire_claim"
+	AuditTypeCleanup                  AuditType = "cleanup"
 )
 
 type AuditEvent interface {
 	GetMessage() string
 	EventAt() time.Time
-	// GetType() AuditType
+	GetType() AuditType
 }
 
 // AuditEventHandler can processing received audit event
