@@ -14,14 +14,17 @@ import (
 func main() {
 	fmt.Println("hello cinderella")
 
-	ctx := context.Background()
+	fmt.Println("load config")
+	config.LoadConfig()
+
 	client, _ := k8s.GetDefaultClient()
 
-	cleaner, err := k8s.NewCleaner(client)
+	cleaner, err := k8s.NewCleaner(client, 0)
 	if err != nil {
 		panic(err)
 	}
 
+	ctx := context.Background()
 	go cleaner.Start(ctx)
 
 	broadcast := audit.AuditBroadcaster{}
