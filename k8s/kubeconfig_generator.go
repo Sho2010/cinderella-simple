@@ -39,7 +39,6 @@ type KubeconfigValues struct {
 
 func (gen *KubeconfigGenerator) Generate(writer io.Writer, name, namespace string) error {
 	sa, err := gen.findSA(name, namespace)
-
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (gen *KubeconfigGenerator) findSA(name, namespace string) (*v1.ServiceAccou
 	ctx := context.TODO()
 	sa, err := gen.Client.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return sa, nil
