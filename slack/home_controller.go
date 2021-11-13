@@ -95,15 +95,21 @@ func (c *HomeController) buildHomeView(claim claim.Claim) (*slack.Blocks, error)
 
 func (c *HomeController) buildClaims() ([]slack.Block, error) {
 	list := claim.ListClaims()
-	blocks := make([]slack.Block, len(list))
+	blocks := []slack.Block{}
 
-	for i, v := range list {
+	for _, v := range list {
 		if slackClaim, ok := v.(*claim.SlackClaim); ok {
-			b, err := slackClaim.ToBlock()
-			if err != nil {
-				return nil, fmt.Errorf("claim to slack.block fail: %w", err)
-			}
-			blocks[i] = b
+			b := ClaimToBlock(slackClaim)
+
+			acceptText := slack.NewTextBlockObject("plain_text", "Accept", false, false)
+			rejectText := slack.NewTextBlockObject("plain_text", "Reject", false, false)
+
+			accept := slack.NewButtonBlockElement(ActionAccept, "accept-claim", acceptText)
+			reject := slack.NewButtonBlockElement(ActionReject, "reject-claim", rejectText)
+
+			permitBlock := slack.NewActionBlock(BlockPermit, accept, reject)
+
+			blocks = append(blocks, b, permitBlock)
 		}
 	}
 	return blocks, nil
