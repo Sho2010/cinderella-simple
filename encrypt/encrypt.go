@@ -16,6 +16,7 @@ type FileEncrypter interface {
 	Encrypt(w io.Writer, r io.Reader) error
 }
 
+//TODO: Functional options patternでオプションを渡せるようにする
 func CreateEncrypter(t EncryptType) (FileEncrypter, error) {
 	switch t {
 	case EncryptTypeZip:
@@ -26,4 +27,3 @@ func CreateEncrypter(t EncryptType) (FileEncrypter, error) {
 
 	return nil, fmt.Errorf("Unknown EncryptType: %s", t)
 }
-
