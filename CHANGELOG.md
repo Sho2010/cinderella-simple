@@ -8,16 +8,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Core implementation
   - Create Role, RoleBinding, ServiceAccount
-  - Deletion expired resources
-  - Generate kubeconfig & stored to secret
-- kubeconfig Zip encryption
-- kubeconfig PGP encryption
-  - encryption from github public key
-  - fetch cinderella public key API
+    - [x] Single Namespace
+    - [ ] Multi Namespaces
+  - [x] Deletion expired resources
+  - [x] Generate kubeconfig & stored to secret
+- [x] kubeconfig Zip encryption
+- [ ] kubeconfig PGP encryption
+  - [ ] encryption from github public key
+  - [ ] fetch cinderella public key API
 - Audit log system
-  - k8s event
+  - [x] tee channel
+  - event destination
+    - [x] log, io.Writer
+    - [ ] k8s event
+    - [x] slack event
+    - [ ] datadog event
 - slack integration
-  - interactive message
-  - slash command
-  - audit log
-
+  - App home
+    - [ ] Admin user view
+      - [ ] Pending claim list
+      - [ ] Accept/Reject claim button
+      - [ ] audit event
+    - [ ] General user view
+  - Claim modal view
+    - [x] Claim submit
+    - [ ] already claimed message
+    - [x] radio button default
+    - [ ] claim period
+  - [x] Send encrypted kubeconfig
+  - [x] audit log
+- logging
+  - structured log
+- Persistent data store
+  - DB?
