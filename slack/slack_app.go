@@ -30,8 +30,11 @@ const (
 const (
 	ActionDownloadKubeconfig = "download_kubeconfig"
 	ActionCreateClaim        = "create_claim"
+	ActionAccept             = "accept"
+	ActionReject             = "reject"
 
 	BlockDownloadKubeconfig = "download_kubeconfig"
+	BlockPermit             = "permit"
 )
 
 func NewSlackApp(administrators []string) *SlackApp {
@@ -180,8 +183,10 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 				panic(err)
 			}
 
-		// case "claim_details":
-		// case "claim_reject":
+		case ActionAccept:
+			fmt.Println("----------------ActionAccept")
+		case ActionReject:
+			fmt.Println("----------------ActionReject")
 		default:
 			s.Socket.Debugf("unsupported block action: %s", v.ActionID)
 		}
