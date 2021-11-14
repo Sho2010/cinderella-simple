@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Sho2010/cinderella-simple/claim"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -172,14 +172,14 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 				slack: s.Api,
 			}
 
-			claim := claim.FindClaim(callback.User.ID)
+			claim := model.FindClaim(callback.User.ID)
 			if claim == nil {
 				if err := c.CallbackClaimNotFound(callback.User.ID); err != nil {
 					panic(err)
 				}
 			}
 
-			if err := c.SendSlackDM(claim); err != nil {
+			if err := c.SendSlackDM(*claim); err != nil {
 				panic(err)
 			}
 
@@ -204,7 +204,7 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *sl
 		}
 		createdClaim, err := c.Create(callback)
 		if err != nil {
-			var validateErr *claim.ClaimValidationError
+			var validateErr *model.ClaimValidationError
 			if errors.As(err, &validateErr) {
 				//TODO: 暫定処理 validation error時にちゃんと適切なフィールドにエラーを出す
 				fmt.Println(err)
@@ -213,7 +213,7 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *sl
 			//TODO: validationエラー時以外のエラーハンドル
 			return nil
 		}
-		claim.AddClaim(createdClaim)
+		model.AddClaim(*createdClaim)
 
 		//HomeTabの更新
 		h := HomeController{slack: s.Api}

@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 
-	"github.com/Sho2010/cinderella-simple/claim"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/slack-go/slack"
 )
 
@@ -38,7 +38,7 @@ type HomeController struct {
 
 func (c *HomeController) Show(userID string) error {
 
-	myClaim := claim.FindClaim(userID)
+	myClaim := model.FindClaim(userID)
 
 	blocks, err := c.buildHomeView(myClaim)
 	if err != nil {
@@ -64,7 +64,7 @@ func (c *HomeController) Update(userID string) error {
 	return c.Show(userID)
 }
 
-func (c *HomeController) buildHomeView(claim claim.Claim) (*slack.Blocks, error) {
+func (c *HomeController) buildHomeView(claim *model.Claim) (*slack.Blocks, error) {
 	blocks := slack.Blocks{}
 
 	if err := blocks.UnmarshalJSON(homeViewJson); err != nil {
@@ -94,7 +94,7 @@ func (c *HomeController) buildHomeView(claim claim.Claim) (*slack.Blocks, error)
 }
 
 func (c *HomeController) buildClaims() ([]slack.Block, error) {
-	list := claim.ListClaims()
+	list := model.ListClaims()
 	blocks := []slack.Block{}
 
 	for _, v := range list {
@@ -131,7 +131,7 @@ func (c *HomeController) buildAdminView() ([]slack.Block, error) {
 	return blocks, nil
 }
 
-func (c *HomeController) buildGeneralView(myClaim claim.Claim) ([]slack.Block, error) {
+func (c *HomeController) buildGeneralView(myClaim *model.Claim) ([]slack.Block, error) {
 	if myClaim == nil {
 		return []slack.Block{slack.NewHeaderBlock(
 			slack.NewTextBlockObject(slack.PlainTextType, "現在申請中の権限請求は存在しません。", false, false),
@@ -141,18 +141,18 @@ func (c *HomeController) buildGeneralView(myClaim claim.Claim) ([]slack.Block, e
 	var headerText string
 	var downloadBlock slack.Block
 	switch myClaim.GetState() {
-	case claim.ClaimStatusAccepted:
+	case model.ClaimStatusAccepted:
 		headerText = ":memo: 承認済みの申請が存在します。\nKUBECONFIGをダウンロードし、作業を行ってください。"
 
 		buttonText := slack.NewTextBlockObject("plain_text", "Download KUBECONFIG :arrow_down:", false, false)
 		dlButton := slack.NewButtonBlockElement(ActionDownloadKubeconfig, "download-kubeconfig-value", buttonText)
 		downloadBlock = slack.NewActionBlock(BlockDownloadKubeconfig, dlButton)
 
-	case claim.ClaimStatusPending:
+	case model.ClaimStatusPending:
 		headerText = "保留中の申請が存在します。"
-	case claim.ClaimStatusExpired:
+	case model.ClaimStatusExpired:
 		headerText = "期限切れの申請が存在します。"
-	case claim.ClaimStatusRejected:
+	case model.ClaimStatusRejected:
 		headerText = "申請が拒否されました。"
 	}
 
@@ -160,7 +160,7 @@ func (c *HomeController) buildGeneralView(myClaim claim.Claim) ([]slack.Block, e
 		slack.NewTextBlockObject(slack.PlainTextType, headerText, false, false),
 	)
 
-	blocks := append([]slack.Block{}, header, ClaimToBlock(myClaim))
+	blocks := append([]slack.Block{}, header, ClaimToBlock(*myClaim))
 	if downloadBlock != nil {
 		blocks = append(blocks, downloadBlock)
 	}

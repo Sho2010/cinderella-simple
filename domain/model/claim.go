@@ -1,4 +1,4 @@
-package claim
+package model
 
 import (
 	"fmt"
@@ -48,25 +48,26 @@ func (err *ClaimValidationError) Is(e error) bool {
 }
 
 //TODO: implement period(制限時間)
-type Claim interface {
-	GetClaimAt() time.Time
-	GetDescription() string
-	GetEmail() string
-	GetEncryptType() encrypt.EncryptType
-	GetName() string
-	GetNamespaces() []string
-	GetState() ClaimStatus
-	GetSubject() string
-	GetLabels() map[string]string
-	GetAnnotations() map[string]string
-	GetServiceAccountName() (string, error)
-	Validate() error
+// type Claim_ interface {
+// 	GetClaimAt() time.Time
+// 	GetDescription() string
+// 	GetEmail() string
+// 	GetEncryptType() encrypt.EncryptType
+// 	GetName() string
+// 	GetNamespaces() []string
+// 	GetState() ClaimStatus
+// 	GetSubject() string
+//
+// 	GetLabels() map[string]string
+// 	GetAnnotations() map[string]string
+// 	GetServiceAccountName() (string, error)
+// 	Validate() error
+//
+// 	//TODO: 暫定
+// 	GetZipPassword() string
+// }
 
-	//TODO: 暫定
-	GetZipPassword() string
-}
-
-type ClaimBase struct {
+type Claim struct {
 	ClaimAt          time.Time           `json:"claim_date"`
 	Description      string              `json:"description"`
 	Email            string              `json:"email,omitempty"`
@@ -84,14 +85,14 @@ type ClaimBase struct {
 }
 
 type ClaimOption interface {
-	Apply(*ClaimBase)
+	Apply(*Claim)
 }
 
 type ZipEncryptOption struct {
 	ZipPassword string `json:"-"`
 }
 
-func (opt ZipEncryptOption) Apply(c *ClaimBase) {
+func (opt ZipEncryptOption) Apply(c *Claim) {
 	c.ZipEncryptOption = opt
 }
 
@@ -99,8 +100,8 @@ func WithZipEncryptOption(opt ZipEncryptOption) ZipEncryptOption {
 	return ZipEncryptOption(opt)
 }
 
-func NewClaimBase(opts ...ClaimOption) *ClaimBase {
-	cb := &ClaimBase{}
+func NewClaimBase(opts ...ClaimOption) *Claim {
+	cb := &Claim{}
 	for _, o := range opts {
 		o.Apply(cb)
 	}
@@ -111,33 +112,33 @@ type GPGEncryptOption struct {
 	PublicKey string `json:"-"`
 }
 
-func (c *ClaimBase) GetClaimAt() time.Time {
+func (c *Claim) GetClaimAt() time.Time {
 	return c.ClaimAt
 }
 
-func (c *ClaimBase) GetDescription() string {
+func (c *Claim) GetDescription() string {
 	return c.Description
 }
 
-func (c *ClaimBase) GetEncryptType() encrypt.EncryptType {
+func (c *Claim) GetEncryptType() encrypt.EncryptType {
 	return c.EncryptType
 }
 
-func (c *ClaimBase) GetNamespaces() []string {
+func (c *Claim) GetNamespaces() []string {
 	return c.Namespaces
 }
 
-func (c *ClaimBase) GetState() ClaimStatus {
+func (c *Claim) GetState() ClaimStatus {
 	return c.State
 }
 
-func (c *ClaimBase) GetLabels() map[string]string {
+func (c *Claim) GetLabels() map[string]string {
 	return map[string]string{
 		"cinderella/claimed-by": c.GetSubject(),
 	}
 }
 
-func (c *ClaimBase) GetAnnotations() map[string]string {
+func (c *Claim) GetAnnotations() map[string]string {
 	return map[string]string{
 		ClaimAnnotationPrefix + "subject":  c.GetSubject(),
 		ClaimAnnotationPrefix + "name":     c.GetName(),
@@ -145,29 +146,29 @@ func (c *ClaimBase) GetAnnotations() map[string]string {
 	}
 }
 
-func (c *ClaimBase) GetSubject() string {
+func (c *Claim) GetSubject() string {
 	return c.Subject
 }
 
-func (c *ClaimBase) GetName() string {
+func (c *Claim) GetName() string {
 	return c.Name
 }
 
-func (c *ClaimBase) GetEmail() string {
+func (c *Claim) GetEmail() string {
 	return c.Email
 }
 
 //TODO: 暫定
-func (c *ClaimBase) GetZipPassword() string {
+func (c *Claim) GetZipPassword() string {
 	return c.ZipPassword
 }
 
 //TODO: 暫定
-func (c *ClaimBase) SetZipPassword(password string) {
+func (c *Claim) SetZipPassword(password string) {
 	c.ZipEncryptOption.ZipPassword = password
 }
 
-func (c *ClaimBase) GetServiceAccountName() (string, error) {
+func (c *Claim) GetServiceAccountName() (string, error) {
 	s, err := NormalizeDNS1123(c.Subject)
 	if err != nil {
 		return "", fmt.Errorf("Subject is not DNS1123: %w", err)
@@ -177,7 +178,7 @@ func (c *ClaimBase) GetServiceAccountName() (string, error) {
 	return fmt.Sprintf("glass-shoes-%s", s), nil
 }
 
-func (c *ClaimBase) Validate() error {
+func (c *Claim) Validate() error {
 	if len(c.Subject) == 0 {
 		return ErrorRequireSubject
 	}
@@ -200,6 +201,7 @@ func (c *ClaimBase) Validate() error {
 	return nil
 }
 
+//TODO utilへ
 func NormalizeDNS1123(str string) (string, error) {
 	//とりあえずよく使われそうな記号だけでも変換する
 	rep := regexp.MustCompile("[@_;:.,=|/]")

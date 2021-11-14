@@ -7,8 +7,8 @@ import (
 	"io"
 	"text/template"
 
-	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/Sho2010/cinderella-simple/config"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -24,7 +24,7 @@ import (
 type ResourceCreater struct {
 	client                  kubernetes.Interface
 	serviceAccountNamespace string
-	claim                   claim.Claim
+	claim                   model.Claim
 }
 
 var _requireLabels = map[string]string{
@@ -36,13 +36,13 @@ var (
 	defaultRoleBindingManifest = "default-role-binding"
 )
 
-func NewResourceCreater(client kubernetes.Interface, serviceAccountNamespace string, claim claim.Claim) (*ResourceCreater, error) {
+func NewResourceCreater(client kubernetes.Interface, serviceAccountNamespace string, claim model.Claim) (*ResourceCreater, error) {
 	if client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
 
-	if claim == nil {
-		return nil, fmt.Errorf("claim is nil")
+	if err := claim.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid claim: %w", err)
 	}
 
 	return &ResourceCreater{
@@ -139,8 +139,8 @@ func (rc *ResourceCreater) createRoleBinding(bindingName string, roleName string
 	}
 
 	saName, _ := rc.claim.GetServiceAccountName()
-	roleName, err := claim.NormalizeDNS1123(roleName + "-" + rc.claim.GetSubject())
-	bindName, err := claim.NormalizeDNS1123(bindingName + "-" + rc.claim.GetSubject())
+	roleName, err := model.NormalizeDNS1123(roleName + "-" + rc.claim.GetSubject())
+	bindName, err := model.NormalizeDNS1123(bindingName + "-" + rc.claim.GetSubject())
 	values := RoleBindingValues{
 		ServiceAccountName:      saName,
 		ServiceAccountNamespace: rc.serviceAccountNamespace,
@@ -185,7 +185,7 @@ func (rc *ResourceCreater) createRole(roleName string, namespace string) (metav1
 		return nil, fmt.Errorf("v1/Role %s manifest file not found", roleName)
 	}
 
-	str, err := claim.NormalizeDNS1123(roleName + "-" + rc.claim.GetSubject())
+	str, err := model.NormalizeDNS1123(roleName + "-" + rc.claim.GetSubject())
 	values := struct{ RoleName string }{
 		RoleName: str,
 	}

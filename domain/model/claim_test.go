@@ -1,4 +1,4 @@
-package claim
+package model
 
 import (
 	"testing"
@@ -12,11 +12,11 @@ func TestValidateError(t *testing.T) {
 		expected error
 		given    Claim
 	}{
-		{"Expected raise ErrorRequireNamespace", ErrorRequireNamespace, &ClaimBase{Namespaces: []string{}, Subject: "subject"}},
-		{"Expected raise ErrorRequireSubject", ErrorRequireSubject, &ClaimBase{Namespaces: []string{}, Subject: ""}},
+		{"Expected raise ErrorRequireNamespace", ErrorRequireNamespace, Claim{Namespaces: []string{}, Subject: "subject"}},
+		{"Expected raise ErrorRequireSubject", ErrorRequireSubject, Claim{Namespaces: []string{}, Subject: ""}},
 		{"Expected raise Error RFC1123 format",
 			&ClaimValidationError{field: "Namespaces", errorType: "RFC1123"},
-			&ClaimBase{Namespaces: []string{"invalid@namespace"}, Subject: "subject"}},
+			Claim{Namespaces: []string{"invalid@namespace"}, Subject: "subject"}},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -61,4 +61,3 @@ func TestWithOption(t *testing.T) {
 	result := NewClaimBase(WithZipEncryptOption(zipOpt))
 	assert.Equal(t, result.ZipEncryptOption.ZipPassword, result.GetZipPassword())
 }
-

@@ -9,8 +9,8 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/Sho2010/cinderella-simple/claim"
 	"github.com/Sho2010/cinderella-simple/config"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/Sho2010/cinderella-simple/encrypt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -145,7 +145,7 @@ func (gen *KubeconfigGenerator) storeKubeconfig(ctx context.Context, sa *v1.Serv
 	return nil
 }
 
-func CreateEncryptedFile(claim claim.Claim) (string, error) {
+func CreateEncryptedFile(claim model.Claim) (string, error) {
 	tmpFile, err := os.CreateTemp("", "kubeconfig")
 	if err != nil {
 		return "", fmt.Errorf("%w", err)
@@ -158,7 +158,7 @@ func CreateEncryptedFile(claim claim.Claim) (string, error) {
 	return tmpFile.Name(), nil
 }
 
-func WriteEncryptedFile(writer io.Writer, claim claim.Claim) error {
+func WriteEncryptedFile(writer io.Writer, claim model.Claim) error {
 	r, w := io.Pipe()
 	defer r.Close()
 

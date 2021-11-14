@@ -3,7 +3,7 @@ package slack
 import (
 	"fmt"
 
-	"github.com/Sho2010/cinderella-simple/claim"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/Sho2010/cinderella-simple/encrypt"
 	"github.com/Sho2010/cinderella-simple/k8s"
 	"github.com/sethvargo/go-password/password"
@@ -22,7 +22,7 @@ func (c *KubeconfigController) CallbackClaimNotFound(channelId string) error {
 	return nil
 }
 
-func (c *KubeconfigController) SendSlackDM(claim claim.Claim) error {
+func (c *KubeconfigController) SendSlackDM(claim model.Claim) error {
 
 	if claim.GetEncryptType() == encrypt.EncryptTypeZip {
 		passwd, err := password.Generate(32, 10, 0, false, false)

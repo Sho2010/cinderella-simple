@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sho2010/cinderella-simple/claim"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/slack-go/slack"
 )
 
@@ -84,7 +84,7 @@ func debugUpdateViewSubmissionResponse() *slack.ViewSubmissionResponse {
 // 			slack.NewSectionBlock(slack.NewTextBlockObject("plain_text", "Test update view submission response", false, false), nil, nil),
 // 		}}}, "dkajfjdajfda", "130321089730192739172392", callback.Container.ViewID)
 
-func ClaimToBlock(c claim.Claim) slack.Block {
+func ClaimToBlock(c model.Claim) slack.Block {
 	// Block example
 	// "text": "Claimer: *<@U04L97CP5>*\nPeriod: *30min*\nClaim Date: *2021/10/26 12:00:00*\nNamespace: *awesome*\nShort description: デバッグしたい"
 	text := fmt.Sprintf("Claimer: *@%s*\nPeriod: *%s*\nClaim Date: *%s*\nNamespace: *%s*\nShort description: %s",

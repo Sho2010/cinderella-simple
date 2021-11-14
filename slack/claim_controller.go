@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Sho2010/cinderella-simple/claim"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/Sho2010/cinderella-simple/encrypt"
 	"github.com/slack-go/slack"
 )
@@ -15,7 +15,7 @@ type ClaimController struct {
 
 func (c *ClaimController) Show(userID, triggerID string) error {
 
-	if claim := claim.FindClaim(userID); claim != nil {
+	if claim := model.FindClaim(userID); claim != nil {
 		//TODO: 既に申請済みの場合エラーを返す
 	}
 
@@ -39,26 +39,27 @@ func (c *ClaimController) Show(userID, triggerID string) error {
 	return nil
 }
 
-func (c *ClaimController) Create(callback slack.InteractionCallback) (claim.Claim, error) {
+func (c *ClaimController) Create(callback slack.InteractionCallback) (*model.Claim, error) {
 	// Viewからの値の取り出し方
 	// callback.View.State.Values[blockID][actionID].Value
 	values := callback.View.State.Values
 
-	if claim := claim.FindClaim(callback.User.ID); claim != nil {
-		return nil, fmt.Errorf("Claim already exist!")
+	if claim := model.FindClaim(callback.User.ID); claim != nil {
+		return claim, fmt.Errorf("Claim already exist!")
 	}
 
 	encryptType := encrypt.EncryptType(values["radio-encrypt-type"]["encrypt-type"].SelectedOption.Value)
 
-	claim := claim.ClaimBase{
+	//TODO: NewClaim
+	claim := model.Claim{
 		Subject:          callback.User.ID,
 		Description:      values["input-description"]["description"].Value,
 		ClaimAt:          time.Now(),
 		EncryptType:      encryptType,
 		Namespaces:       []string{values["input-namespace"]["namespace"].Value},
-		State:            claim.ClaimStatusPending,
-		ZipEncryptOption: claim.ZipEncryptOption{},
-		GPGEncryptOption: claim.GPGEncryptOption{},
+		State:            model.ClaimStatusPending,
+		ZipEncryptOption: model.ZipEncryptOption{},
+		GPGEncryptOption: model.GPGEncryptOption{},
 	}
 	if err := claim.Validate(); err != nil {
 		return nil, err

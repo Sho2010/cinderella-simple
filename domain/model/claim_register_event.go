@@ -1,4 +1,4 @@
-package claim
+package model
 
 import (
 	"time"

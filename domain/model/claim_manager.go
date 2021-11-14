@@ -1,4 +1,4 @@
-package claim
+package model
 
 import (
 	"fmt"
@@ -32,10 +32,10 @@ func (m *ClaimManager) addClaim(c Claim) {
 	audit.PublishEvent(&e)
 }
 
-func (m *ClaimManager) findClaim(subject string) Claim {
+func (m *ClaimManager) findClaim(subject string) *Claim {
 	for _, claim := range m.claims {
 		if claim.GetSubject() == subject {
-			return claim
+			return &claim
 		}
 	}
 	return nil
@@ -46,7 +46,7 @@ func AddClaim(c Claim) {
 }
 
 // FindClaim is find claim by subject
-func FindClaim(subject string) Claim {
+func FindClaim(subject string) *Claim {
 	return _cmInstance.findClaim(subject)
 }
 
