@@ -22,9 +22,6 @@ func (c *KubeconfigController) CallbackClaimNotFound(channelId string) error {
 	return nil
 }
 
-func (c *KubeconfigController) Create(claim.Claim) {
-}
-
 func (c *KubeconfigController) SendSlackDM(claim claim.Claim) error {
 
 	if claim.GetEncryptType() == encrypt.EncryptTypeZip {
@@ -37,6 +34,7 @@ func (c *KubeconfigController) SendSlackDM(claim claim.Claim) error {
 		// claim.SetZipPassword(passwd)
 	}
 
+	//TODO slack packageをk8Sに依存させない　適切なlayer
 	filePath, err := k8s.CreateEncryptedFile(claim)
 	if err != nil {
 		return fmt.Errorf("%w", err)

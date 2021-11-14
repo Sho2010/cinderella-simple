@@ -98,19 +98,17 @@ func (c *HomeController) buildClaims() ([]slack.Block, error) {
 	blocks := []slack.Block{}
 
 	for _, v := range list {
-		if slackClaim, ok := v.(*claim.SlackClaim); ok {
-			b := ClaimToBlock(slackClaim)
+		b := ClaimToBlock(v)
 
-			acceptText := slack.NewTextBlockObject("plain_text", "Accept", false, false)
-			rejectText := slack.NewTextBlockObject("plain_text", "Reject", false, false)
+		acceptText := slack.NewTextBlockObject("plain_text", "Accept", false, false)
+		rejectText := slack.NewTextBlockObject("plain_text", "Reject", false, false)
 
-			accept := slack.NewButtonBlockElement(ActionAccept, "accept-claim", acceptText)
-			reject := slack.NewButtonBlockElement(ActionReject, "reject-claim", rejectText)
+		accept := slack.NewButtonBlockElement(ActionAccept, "accept-claim", acceptText)
+		reject := slack.NewButtonBlockElement(ActionReject, "reject-claim", rejectText)
 
-			permitBlock := slack.NewActionBlock(BlockPermit, accept, reject)
+		permitBlock := slack.NewActionBlock(BlockPermit, accept, reject)
 
-			blocks = append(blocks, b, permitBlock)
-		}
+		blocks = append(blocks, b, permitBlock)
 	}
 	return blocks, nil
 }
@@ -138,11 +136,6 @@ func (c *HomeController) buildGeneralView(myClaim claim.Claim) ([]slack.Block, e
 		return []slack.Block{slack.NewHeaderBlock(
 			slack.NewTextBlockObject(slack.PlainTextType, "現在申請中の権限請求は存在しません。", false, false),
 		)}, nil
-	}
-
-	//DEBUG:
-	if mc, ok := myClaim.(*claim.SlackClaim); ok {
-		mc.State = claim.ClaimStatusAccepted
 	}
 
 	var headerText string
