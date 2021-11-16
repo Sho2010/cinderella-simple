@@ -92,5 +92,7 @@ func GetCinderellaNamespace() string {
 		_cinderellaNamespace = config.GetConfig().Namespace
 	}
 
+	// TODO: マジで取れなかった場合 error
+
 	return _cinderellaNamespace
 }

@@ -156,6 +156,21 @@ func (rc *ResourceCreator) createRoleBinding(bindingName string, roleName string
 	}
 	rb := obj.(*rbacv1.RoleBinding)
 	rbClient := rc.client.RbacV1().RoleBindings(namespace)
+
+	if rb.Labels == nil {
+		rb.Labels = make(map[string]string)
+	}
+	if err := rc.mergeLabels(rb.Labels); err != nil {
+		panic(err)
+	}
+
+	if rb.Annotations == nil {
+		rb.Annotations = make(map[string]string)
+	}
+	if err := rc.mergeAnnotations(rb.Annotations); err != nil {
+		panic(err)
+	}
+
 	ret, err := rbClient.Create(context.TODO(), rb, metav1.CreateOptions{})
 
 	if err != nil {

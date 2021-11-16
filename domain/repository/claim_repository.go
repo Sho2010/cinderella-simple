@@ -24,6 +24,10 @@ func init() {
 	_memoryClaimRepository = MemoryClaimRepository{}
 }
 
+func GetMemoryClaimRepository() MemoryClaimRepository {
+	return _memoryClaimRepository
+}
+
 func DefaultClaimRepository() ClaimRepository {
 	// 他のrepositoryを使う場合はregistryに処理を移す
 	return &_memoryClaimRepository

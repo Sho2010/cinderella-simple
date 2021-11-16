@@ -3,7 +3,7 @@ package slack
 import (
 	"fmt"
 
-	"github.com/Sho2010/cinderella-simple/domain/model"
+	"github.com/Sho2010/cinderella-simple/domain/repository"
 	"github.com/Sho2010/cinderella-simple/encrypt"
 	"github.com/Sho2010/cinderella-simple/k8s"
 	"github.com/sethvargo/go-password/password"
@@ -11,7 +11,15 @@ import (
 )
 
 type KubeconfigController struct {
-	slack *slack.Client
+	slack           *slack.Client
+	claimRepository repository.ClaimRepository
+}
+
+func NewKubeconfigController(slack *slack.Client, claimRepository repository.ClaimRepository) *KubeconfigController {
+	return &KubeconfigController{
+		slack:           slack,
+		claimRepository: claimRepository,
+	}
 }
 
 func (c *KubeconfigController) CallbackClaimNotFound(channelId string) error {
@@ -22,20 +30,22 @@ func (c *KubeconfigController) CallbackClaimNotFound(channelId string) error {
 	return nil
 }
 
-func (c *KubeconfigController) SendSlackDM(claim model.Claim) error {
+func (c *KubeconfigController) SendSlackDM(subject string) error {
+	claim, err := c.claimRepository.FindBySubject("")
+	if err != nil {
+		return err
+	}
 
-	if claim.GetEncryptType() == encrypt.EncryptTypeZip {
+	if claim.GetEncryptType() == encrypt.EncryptTypeZip && claim.ZipEncryptOption.ZipPassword == "" {
 		passwd, err := password.Generate(32, 10, 0, false, false)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		fmt.Println(passwd)
-		//FIXME
-		// claim.SetZipPassword(passwd)
+		claim.ZipEncryptOption.ZipPassword = passwd
 	}
 
 	//TODO slack packageをk8Sに依存させない　適切なlayer
-	filePath, err := k8s.CreateEncryptedFile(claim)
+	filePath, err := k8s.CreateEncryptedFile(*claim)
 	if err != nil {
 		return fmt.Errorf("%w", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Sho2010/cinderella-simple/domain/model"
+	"github.com/Sho2010/cinderella-simple/domain/repository"
 	"github.com/slack-go/slack"
 )
 
@@ -33,12 +34,19 @@ var (
 )
 
 type HomeController struct {
-	slack *slack.Client
+	slack           *slack.Client
+	claimRepository repository.ClaimRepository
+}
+
+func NewHomeController(slack *slack.Client, claimRepository repository.ClaimRepository) *HomeController {
+	return &HomeController{
+		slack:           slack,
+		claimRepository: claimRepository,
+	}
 }
 
 func (c *HomeController) Show(userID string) error {
-
-	myClaim := model.FindClaim(userID)
+	myClaim, _ := c.claimRepository.FindBySubject(userID)
 
 	blocks, err := c.buildHomeView(myClaim)
 	if err != nil {
@@ -72,7 +80,7 @@ func (c *HomeController) buildHomeView(claim *model.Claim) (*slack.Blocks, error
 	}
 
 	//TODO: 管理者固定になってる
-	isAdmin := false
+	isAdmin := true
 
 	if isAdmin {
 		adminBlocks, err := c.buildAdminView()
@@ -94,7 +102,11 @@ func (c *HomeController) buildHomeView(claim *model.Claim) (*slack.Blocks, error
 }
 
 func (c *HomeController) buildClaims() ([]slack.Block, error) {
-	list := model.ListClaims()
+	list, err := c.claimRepository.List()
+	if err != nil {
+		return nil, err
+	}
+
 	blocks := []slack.Block{}
 
 	for _, v := range list {

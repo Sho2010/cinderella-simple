@@ -1,12 +1,11 @@
 package slack
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/Sho2010/cinderella-simple/domain/model"
+	"github.com/Sho2010/cinderella-simple/domain/repository"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -145,9 +144,7 @@ func (s *SlackApp) Start() {
 }
 
 func (s *SlackApp) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
-	c := HomeController{
-		slack: s.Api,
-	}
+	c := NewHomeController(s.Api, repository.DefaultClaimRepository())
 	c.Show(e.User)
 }
 
@@ -159,10 +156,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 	for _, v := range callback.ActionCallback.BlockActions {
 		switch v.ActionID {
 		case ActionCreateClaim:
-			c := ClaimController{
-				Slack: s,
-			}
-
+			c := NewClaimController(s, repository.DefaultClaimRepository())
 			if err := c.Show(callback.User.ID, callback.TriggerID); err != nil {
 				panic(err)
 			}
@@ -171,24 +165,21 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 			c := KubeconfigController{
 				slack: s.Api,
 			}
-
-			claim := model.FindClaim(callback.User.ID)
-			if claim == nil {
-				if err := c.CallbackClaimNotFound(callback.User.ID); err != nil {
-					panic(err)
-				}
-			}
-
-			if err := c.SendSlackDM(*claim); err != nil {
+			if err := c.SendSlackDM(callback.User.ID); err != nil {
 				panic(err)
 			}
 
 		case ActionAccept:
 			c := NewAcceptController()
-			c.Accept(callback.User.ID)
+			if err := c.Accept(callback.User.ID); err != nil {
+				panic(err)
+			}
+
 		case ActionReject:
 			c := NewRejectController()
-			c.Reject(callback.User.ID)
+			if err := c.Reject(callback.User.ID); err != nil {
+				panic(err)
+			}
 		default:
 			s.Socket.Debugf("unsupported block action: %s", v.ActionID)
 		}
@@ -201,24 +192,32 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *sl
 
 	switch callback.View.CallbackID {
 	case ViewClaimCallbackID: // Claim modal viewのインタラクションイベント
-		c := ClaimController{
-			Slack: s,
-		}
-		createdClaim, err := c.Create(callback)
-		if err != nil {
-			var validateErr *model.ClaimValidationError
-			if errors.As(err, &validateErr) {
-				//TODO: 暫定処理 validation error時にちゃんと適切なフィールドにエラーを出す
-				fmt.Println(err)
-				return debugErrorsViewSubmissionResponse()
-			}
-			//TODO: validationエラー時以外のエラーハンドル
-			return nil
-		}
-		model.AddClaim(*createdClaim)
+		c := NewClaimController(s, repository.DefaultClaimRepository())
 
+		_, err := c.RegisterClaim(callback)
+		if err != nil {
+			// var validateErr *model.ClaimValidationError
+			// if errors.As(err, &validateErr) {
+			// 	//TODO: 暫定処理 validation error時にちゃんと適切なフィールドにエラーを出す
+			// 	fmt.Println(err)
+			// 	return debugErrorsViewSubmissionResponse()
+			// }
+
+			//TODO: validationエラー時以外のエラーハンドル
+			if c.IsClaimAlreadyExistError(err) {
+				return nil
+			}
+			panic(err)
+		}
+
+		list, _ := repository.DefaultClaimRepository().List()
+		for v := range list {
+			fmt.Println(v)
+		}
+
+		// error message出せるようにする
 		//HomeTabの更新
-		h := HomeController{slack: s.Api}
+		h := NewHomeController(s.Api, repository.DefaultClaimRepository())
 		h.Update(callback.User.ID)
 
 		return nil
