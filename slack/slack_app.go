@@ -184,9 +184,11 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 			}
 
 		case ActionAccept:
-			fmt.Println("----------------ActionAccept")
+			c := NewAcceptController()
+			c.Accept(callback.User.ID)
 		case ActionReject:
-			fmt.Println("----------------ActionReject")
+			c := NewRejectController()
+			c.Reject(callback.User.ID)
 		default:
 			s.Socket.Debugf("unsupported block action: %s", v.ActionID)
 		}

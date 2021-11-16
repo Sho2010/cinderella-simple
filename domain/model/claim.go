@@ -178,6 +178,16 @@ func (c *Claim) GetServiceAccountName() (string, error) {
 	return fmt.Sprintf("glass-shoes-%s", s), nil
 }
 
+func (c *Claim) Accept() {
+	c.State = ClaimStatusAccepted
+	c.AcceptedAt = time.Now()
+}
+
+func (c *Claim) Reject() {
+	c.State = ClaimStatusRejected
+	c.RejectedAt = time.Now()
+}
+
 func (c *Claim) Validate() error {
 	if len(c.Subject) == 0 {
 		return ErrorRequireSubject
