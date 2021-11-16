@@ -21,7 +21,7 @@ import (
 
 // NOTE: https://github.com/kubernetes/client-go/issues/193
 
-type ResourceCreater struct {
+type ResourceCreator struct {
 	client                  kubernetes.Interface
 	serviceAccountNamespace string
 	claim                   model.Claim
@@ -36,7 +36,7 @@ var (
 	defaultRoleBindingManifest = "default-role-binding"
 )
 
-func NewResourceCreater(client kubernetes.Interface, serviceAccountNamespace string, claim model.Claim) (*ResourceCreater, error) {
+func NewResourceCreator(client kubernetes.Interface, serviceAccountNamespace string, claim model.Claim) (*ResourceCreator, error) {
 	if client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
@@ -45,14 +45,14 @@ func NewResourceCreater(client kubernetes.Interface, serviceAccountNamespace str
 		return nil, fmt.Errorf("invalid claim: %w", err)
 	}
 
-	return &ResourceCreater{
+	return &ResourceCreator{
 		client:                  client,
 		serviceAccountNamespace: serviceAccountNamespace,
 		claim:                   claim,
 	}, nil
 }
 
-func (rc *ResourceCreater) Create() error {
+func (rc *ResourceCreator) Create() error {
 
 	// TODO: each
 	// for _, ns := range rc.claim.GetNamespaces() {
@@ -90,7 +90,7 @@ func (rc *ResourceCreater) Create() error {
 	return nil
 }
 
-func (rc *ResourceCreater) createServiceAccount() (metav1.Object, error) {
+func (rc *ResourceCreator) createServiceAccount() (metav1.Object, error) {
 	//TODO: err
 	saName, _ := rc.claim.GetServiceAccountName()
 
@@ -128,7 +128,7 @@ func (rc *ResourceCreater) createServiceAccount() (metav1.Object, error) {
 }
 
 //TODO: arg適当すぎるのでリファクタ
-func (rc *ResourceCreater) createRoleBinding(bindingName string, roleName string, namespace string) (metav1.Object, error) {
+func (rc *ResourceCreator) createRoleBinding(bindingName string, roleName string, namespace string) (metav1.Object, error) {
 	scheme := runtime.NewScheme()
 	codecFactory := serializer.NewCodecFactory(scheme)
 	deserializer := codecFactory.UniversalDeserializer()
@@ -174,7 +174,7 @@ func (rc *ResourceCreater) createRoleBinding(bindingName string, roleName string
 	return ret, nil
 }
 
-func (rc *ResourceCreater) createRole(roleName string, namespace string) (metav1.Object, error) {
+func (rc *ResourceCreator) createRole(roleName string, namespace string) (metav1.Object, error) {
 
 	scheme := runtime.NewScheme()
 	codecFactory := serializer.NewCodecFactory(scheme)
@@ -228,7 +228,7 @@ func (rc *ResourceCreater) createRole(roleName string, namespace string) (metav1
 	return ret, nil
 }
 
-func (rc *ResourceCreater) mergeLabels(dist map[string]string) error {
+func (rc *ResourceCreator) mergeLabels(dist map[string]string) error {
 	if err := mergo.Map(&dist, rc.claim.GetLabels()); err != nil {
 		return err
 	}
@@ -240,7 +240,7 @@ func (rc *ResourceCreater) mergeLabels(dist map[string]string) error {
 	return nil
 }
 
-func (rc *ResourceCreater) mergeAnnotations(dist map[string]string) error {
+func (rc *ResourceCreator) mergeAnnotations(dist map[string]string) error {
 	if err := mergo.Map(&dist, rc.claim.GetAnnotations()); err != nil {
 		return err
 	}
