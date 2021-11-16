@@ -3,8 +3,9 @@ module github.com/Sho2010/cinderella-simple
 go 1.17
 
 require (
+	github.com/imdario/mergo v0.3.5
 	github.com/sethvargo/go-password v0.2.0
-	github.com/slack-go/slack v0.9.5
+	github.com/slack-go/slack v0.10.0
 	github.com/spf13/viper v1.9.0
 	github.com/stretchr/testify v1.7.0
 	github.com/yeka/zip v0.0.0-20180914125537-d046722c6feb
@@ -25,7 +26,6 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
