@@ -166,7 +166,7 @@ func (c *Cleaner) listRoleBindings(ctx context.Context) (*rbacv1.RoleBindingList
 
 func (c *Cleaner) listServiceAccounts(ctx context.Context) (*corev1.ServiceAccountList, error) {
 
-	list, err := c.client.CoreV1().ServiceAccounts(_serviceAccountNamespace).List(ctx, c.getListOptions())
+	list, err := c.client.CoreV1().ServiceAccounts(GetCinderellaNamespace()).List(ctx, c.getListOptions())
 	if err != nil {
 		return nil, &CleanupError{
 			msg: "Failed to list managed roleBindings resources",

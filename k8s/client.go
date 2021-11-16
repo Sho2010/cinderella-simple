@@ -15,8 +15,8 @@ const (
 	ManagedLabelValue = "cinderella"
 )
 
-// TODO: configから取得する
-var _serviceAccountNamespace = "default"
+// TODO: configもしくは自分自身(POD)から取得する
+var _cinderellaNamespace = ""
 
 var _managedResourceLabels = map[string]string{
 	ManagedLabel: ManagedLabelValue,
@@ -75,4 +75,22 @@ func GetClientOutOfCluster() (kubernetes.Interface, string) {
 	}
 
 	return clientset, config.Host
+}
+
+// GetCinderellaNamespace returns the namespace of cinderella
+// it returns the get from CINDERELLA_POD_NAMESPACE environment variables
+// if it is empty, it returns the get from configfile
+func GetCinderellaNamespace() string {
+	// See: https://kubernetes.io/ja/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
+	if _cinderellaNamespace == "" {
+		log.Println("Get cinderella Namespace from CINDERELLA_POD_NAMESPACE environment variable")
+		_cinderellaNamespace = os.Getenv("CINDERELLA_POD_NAMESPACE")
+	}
+
+	if _cinderellaNamespace == "" {
+		log.Println("Get cinderella Namespace from configfile")
+		_cinderellaNamespace = config.GetConfig().Namespace
+	}
+
+	return _cinderellaNamespace
 }

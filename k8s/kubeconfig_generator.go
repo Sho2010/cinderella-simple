@@ -174,7 +174,7 @@ func WriteEncryptedFile(writer io.Writer, claim model.Claim) error {
 			//FIXME
 			panic(err)
 		}
-		gen.Generate(w, sa, _serviceAccountNamespace)
+		gen.Generate(w, sa, GetCinderellaNamespace())
 	}()
 
 	var enc encrypt.FileEncrypter

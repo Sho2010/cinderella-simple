@@ -36,18 +36,15 @@ var (
 	defaultRoleBindingManifest = "default-role-binding"
 )
 
-func NewResourceCreator(client kubernetes.Interface, serviceAccountNamespace string, claim model.Claim) (*ResourceCreator, error) {
-	if client == nil {
-		return nil, fmt.Errorf("client is nil")
-	}
-
+func NewResourceCreator(claim model.Claim) (*ResourceCreator, error) {
 	if err := claim.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid claim: %w", err)
 	}
 
+	client, _ := GetDefaultClient()
 	return &ResourceCreator{
 		client:                  client,
-		serviceAccountNamespace: serviceAccountNamespace,
+		serviceAccountNamespace: GetCinderellaNamespace(),
 		claim:                   claim,
 	}, nil
 }
