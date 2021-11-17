@@ -1,10 +1,12 @@
 package slack
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/Sho2010/cinderella-simple/domain/repository"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
@@ -145,7 +147,7 @@ func (s *SlackApp) Start() {
 
 func (s *SlackApp) appHomeOpenedHandler(e *slackevents.AppHomeOpenedEvent) {
 	c := NewHomeController(s.Api, repository.DefaultClaimRepository())
-	c.Show(e.User)
+	c.PublishView(e.User)
 }
 
 func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
@@ -156,6 +158,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 	for _, v := range callback.ActionCallback.BlockActions {
 		switch v.ActionID {
 		case ActionCreateClaim:
+			//TODO: 既に申請済みの場合エラーを返す
 			c := NewClaimController(s, repository.DefaultClaimRepository())
 			if err := c.Show(callback.User.ID, callback.TriggerID); err != nil {
 				panic(err)
@@ -193,35 +196,24 @@ func (s *SlackApp) viewSubmissionHandler(callback slack.InteractionCallback) *sl
 	switch callback.View.CallbackID {
 	case ViewClaimCallbackID: // Claim modal viewのインタラクションイベント
 		c := NewClaimController(s, repository.DefaultClaimRepository())
-
-		_, err := c.RegisterClaim(callback)
-		if err != nil {
-			// var validateErr *model.ClaimValidationError
-			// if errors.As(err, &validateErr) {
-			// 	//TODO: 暫定処理 validation error時にちゃんと適切なフィールドにエラーを出す
-			// 	fmt.Println(err)
-			// 	return debugErrorsViewSubmissionResponse()
-			// }
-
-			//TODO: validationエラー時以外のエラーハンドル
-			if c.IsClaimAlreadyExistError(err) {
-				return nil
-			}
-			panic(err)
-		}
-
-		list, _ := repository.DefaultClaimRepository().List()
-		for v := range list {
-			fmt.Println(v)
-		}
-
-		// error message出せるようにする
-		//HomeTabの更新
 		h := NewHomeController(s.Api, repository.DefaultClaimRepository())
-		h.Update(callback.User.ID)
+
+		// TODO: error処理
+		// validation errorの場合はモーダルに戻す
+		// それ以外はhomeに戻す
+		_, err := c.RegisterClaim(callback)
+		if err == nil {
+			h.PublishView(callback.User.ID) //HomeTabの更新
+		} else {
+			var validateErr *model.ClaimValidationError
+			if errors.As(err, &validateErr) {
+				//TODO: 暫定処理 validation error時にちゃんと適切なフィールドにエラーを出す
+				return debugErrorsViewSubmissionResponse()
+			}
+			h.PublishView(callback.User.ID, err) //HomeTabの更新
+		}
 
 		return nil
-
 	default:
 		s.Socket.Debugf("unsupported callbackID: %s", callback.View.CallbackID)
 		return nil

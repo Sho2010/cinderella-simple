@@ -45,12 +45,17 @@ func NewHomeController(slack *slack.Client, claimRepository repository.ClaimRepo
 	}
 }
 
-func (c *HomeController) Show(userID string) error {
+func (c *HomeController) PublishView(userID string, withErrors ...error) error {
 	myClaim, _ := c.claimRepository.FindBySubject(userID)
 
 	blocks, err := c.buildHomeView(myClaim)
 	if err != nil {
 		return fmt.Errorf("HomeView build failed: %w", err)
+	}
+
+	if len(withErrors) > 0 {
+		errBlocks := buildErrorBlocks(withErrors)
+		blocks.BlockSet = append(blocks.BlockSet, errBlocks...)
 	}
 
 	_, err = c.slack.PublishView(userID,
@@ -68,8 +73,33 @@ func (c *HomeController) Show(userID string) error {
 	return nil
 }
 
-func (c *HomeController) Update(userID string) error {
-	return c.Show(userID)
+func buildErrorBlocks(errors []error) []slack.Block {
+	blocks := []slack.Block{}
+
+	if len(errors) == 0 {
+		return blocks
+	}
+
+	blocks = append(blocks, slack.NewDividerBlock())
+	header := slack.NewHeaderBlock(
+		slack.NewTextBlockObject(slack.PlainTextType, "error!", false, false),
+	)
+	blocks = append(blocks, header)
+
+	for _, v := range errors {
+		if v == nil {
+			continue
+		}
+
+		section := slack.NewSectionBlock(
+			slack.NewTextBlockObject(slack.PlainTextType, v.Error(), false, false),
+			nil,
+			nil,
+		)
+		blocks = append(blocks, section)
+	}
+
+	return blocks
 }
 
 func (c *HomeController) buildHomeView(claim *model.Claim) (*slack.Blocks, error) {
@@ -97,7 +127,6 @@ func (c *HomeController) buildHomeView(claim *model.Claim) (*slack.Blocks, error
 		fmt.Printf("%#v\n", blocks)
 	}
 
-	fmt.Println(len(blocks.BlockSet))
 	return &blocks, nil
 }
 
