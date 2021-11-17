@@ -35,9 +35,9 @@ func DefaultClaimRepository() ClaimRepository {
 
 // implement ClaimRepository
 func (repo *MemoryClaimRepository) FindBySubject(subject string) (*model.Claim, error) {
-	for _, claim := range repo.claims {
+	for i, claim := range repo.claims {
 		if claim.Subject == subject {
-			return &claim, nil
+			return &repo.claims[i], nil
 		}
 	}
 	return nil, fmt.Errorf("claim not found")
