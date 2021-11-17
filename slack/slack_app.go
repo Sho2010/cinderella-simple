@@ -175,13 +175,15 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 		case ActionAccept:
 			c := NewAcceptController()
 			if err := c.Accept(callback.User.ID); err != nil {
-				panic(err)
+				h := NewHomeController(s.Api, repository.DefaultClaimRepository())
+				h.PublishView(callback.User.ID, err)
 			}
 
 		case ActionReject:
 			c := NewRejectController()
 			if err := c.Reject(callback.User.ID); err != nil {
-				panic(err)
+				h := NewHomeController(s.Api, repository.DefaultClaimRepository())
+				h.PublishView(callback.User.ID, err)
 			}
 		default:
 			s.Socket.Debugf("unsupported block action: %s", v.ActionID)
