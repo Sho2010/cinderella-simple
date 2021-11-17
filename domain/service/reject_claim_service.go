@@ -1,6 +1,8 @@
 package service
 
 import (
+	"github.com/Sho2010/cinderella-simple/domain/event"
+	"github.com/Sho2010/cinderella-simple/domain/model"
 	"github.com/Sho2010/cinderella-simple/domain/repository"
 )
 
@@ -21,6 +23,7 @@ func (s *RejectClaimService) RejectClaim(subject string) error {
 	}
 
 	if claim.GetState() != "pending" {
+	if claim.GetState() != model.ClaimStatusPending {
 		return ErrInvalidClaimStatus
 	}
 
@@ -29,5 +32,6 @@ func (s *RejectClaimService) RejectClaim(subject string) error {
 	if err != nil {
 		return err
 	}
+	event.PublishClaimEvent(event.NewClaimEvent(claim.Subject, event.ClaimEventRejected))
 	return nil
 }

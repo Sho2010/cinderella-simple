@@ -9,6 +9,7 @@ import (
 type ClaimRegisterEvent struct {
 	message string
 	eventAt time.Time
+	subject string
 }
 
 // Verify interface compliance
