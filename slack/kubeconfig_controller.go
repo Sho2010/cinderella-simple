@@ -31,7 +31,7 @@ func (c *KubeconfigController) CallbackClaimNotFound(channelId string) error {
 }
 
 func (c *KubeconfigController) SendSlackDM(subject string) error {
-	claim, err := c.claimRepository.FindBySubject("")
+	claim, err := c.claimRepository.FindBySubject(subject)
 	if err != nil {
 		return err
 	}
