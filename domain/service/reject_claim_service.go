@@ -22,7 +22,6 @@ func (s *RejectClaimService) RejectClaim(subject string) error {
 		return err
 	}
 
-	if claim.GetState() != "pending" {
 	if claim.GetState() != model.ClaimStatusPending {
 		return ErrInvalidClaimStatus
 	}
