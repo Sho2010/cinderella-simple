@@ -19,7 +19,7 @@ func init() {
 }
 
 type Config struct {
-	CleanupTickEverySeconds int
+	CleanupTickEverySeconds int `validate:"gte=10,lte=600"`
 	Namespace               string
 	ManifestDirs            []string
 	KubeServer              string

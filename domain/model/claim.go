@@ -48,34 +48,15 @@ func (err *ClaimValidationError) Is(e error) bool {
 }
 
 //TODO: implement period(制限時間)
-// type Claim_ interface {
-// 	GetClaimAt() time.Time
-// 	GetDescription() string
-// 	GetEmail() string
-// 	GetEncryptType() encrypt.EncryptType
-// 	GetName() string
-// 	GetNamespaces() []string
-// 	GetState() ClaimStatus
-// 	GetSubject() string
-//
-// 	GetLabels() map[string]string
-// 	GetAnnotations() map[string]string
-// 	GetServiceAccountName() (string, error)
-// 	Validate() error
-//
-// 	//TODO: 暫定
-// 	GetZipPassword() string
-// }
-
 type Claim struct {
 	ClaimAt          time.Time           `json:"claim_date"`
 	Description      string              `json:"description"`
-	Email            string              `json:"email,omitempty"`
+	Email            string              `json:"email,omitempty" validate:"email"`
 	EncryptType      encrypt.EncryptType `json:"encrypt_type,omitempty"`
 	Name             string              `json:"name,omitempty"`
 	Namespaces       []string            `json:"namespace"`
 	State            ClaimStatus         `json:"status"`
-	Subject          string              `json:"subject,omitempty"`
+	Subject          string              `json:"subject,omitempty" validate:"required"`
 	ZipEncryptOption `json:"zip_option,omitempty"`
 	GPGEncryptOption `json:"gpg_option,omitempty"`
 
