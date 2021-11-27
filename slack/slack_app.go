@@ -165,9 +165,7 @@ func (s *SlackApp) blockActionsHandler(callback slack.InteractionCallback) {
 			}
 
 		case ActionDownloadKubeconfig:
-			c := KubeconfigController{
-				slack: s.Api,
-			}
+			c := NewKubeconfigController(s.Api, repository.DefaultClaimRepository())
 			if err := c.SendSlackDM(callback.User.ID); err != nil {
 				panic(err)
 			}
