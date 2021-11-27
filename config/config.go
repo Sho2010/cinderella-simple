@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 )
 
@@ -60,6 +61,11 @@ func LoadConfig() *Config {
 			dir = homedir + dir[1:]
 			_instance.ManifestDirs[i] = dir
 		}
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(_instance); err != nil {
+		panic(fmt.Errorf("configuration validation error, %w", err))
 	}
 
 	return _instance
