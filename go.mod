@@ -3,6 +3,7 @@ module github.com/Sho2010/cinderella-simple
 go 1.17
 
 require (
+	github.com/go-playground/validator/v10 v10.9.0
 	github.com/imdario/mergo v0.3.12
 	github.com/sethvargo/go-password v0.2.0
 	github.com/slack-go/slack v0.10.0
@@ -21,7 +22,6 @@ require (
 	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
