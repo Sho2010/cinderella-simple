@@ -1,4 +1,4 @@
-FROM golang:1.18.0 as build-env
+FROM golang:1.18.1 as build-env
 
 ENV GO111MODULE=on
 WORKDIR /go/src/app
