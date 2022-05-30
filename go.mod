@@ -3,7 +3,7 @@ module github.com/Sho2010/cinderella-simple
 go 1.18
 
 require (
-	github.com/imdario/mergo v0.3.12
+	github.com/imdario/mergo v0.3.13
 	github.com/sethvargo/go-password v0.2.0
 	github.com/slack-go/slack v0.10.3
 	github.com/spf13/viper v1.12.0
