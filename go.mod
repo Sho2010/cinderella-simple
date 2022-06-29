@@ -10,8 +10,8 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/yeka/zip v0.0.0-20180914125537-d046722c6feb
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
-	k8s.io/api v0.24.1
-	k8s.io/apimachinery v0.24.1
+	k8s.io/api v0.24.2
+	k8s.io/apimachinery v0.24.2
 	k8s.io/client-go v0.24.1
 )
 
